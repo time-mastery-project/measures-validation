@@ -1,0 +1,251 @@
+
+# Data and Libraries ####
+
+rm(list=ls())
+library(readxl)
+library(lavaan)
+library(semTools)
+library(psych)
+library(ggplot2)
+library(tidyr)
+library(dplyr)
+library(corrplot)
+source("R/custom-functions.R")
+fi = c("rmsea","srmr","cfi","nnfi")
+
+df = data.frame(read_excel("data/Database_Time_16.05.25_PD&MI.xlsx")); nrow(df)
+df = df[!is.na(df$Class),]; nrow(df)
+
+dd = data.frame(read_excel("data/Data_Dictionary.xlsx"))
+dd$Var_name = gsub("[ °-]",".",dd$Var_name)
+
+# Constructs and NA ####
+
+# list of constructs and ratios of complete observations
+
+tb = as.data.frame(table(dd$ScaleName,dd$Construct))
+tb = tb[tb$Freq!=0,1:2]
+names(tb) = c("Scale","Construct")
+tb$completeObs = NA
+for(i in 1:nrow(tb)){
+  x = dd$Var_name[dd$ScaleName==tb$Scale[i] & dd$Construct==tb$Construct[i]]; x = x[!is.na(x)]
+  tb$completeObs[i] = round(mean(rowMeans(!is.na(df[,x]))),3)
+}; tb
+# write.csv(tb,"tb.csv",row.names=F)
+
+# basic descriptives ####
+
+length(unique(df$School)); length(unique(df$Class))
+table(df$Grade)
+
+# check missing values and compute preliminary correlations ####
+
+mean(apply(is.na(df[,paste0("OTm_",1:16)]),1,sum)==0)
+mean(apply(is.na(df[,paste0("OTp_",1:10)]),1,sum)==0)
+mean(apply(is.na(df[,paste0("QSTm_",1:10,"_t")]),1,sum)==0)
+mean(apply(is.na(df[,paste0("QSTp_",1:10,"_p")]),1,sum)==0)
+
+df$OTm = apply(df[,paste0("OTm_",1:16)],1,sum)
+df$QSTmt = apply(df[,paste0("QSTm_",1:10,"_t")],1,sum)
+df$QSTmp = apply(df[,paste0("QSTm_",1:10,"_p")],1,sum)
+
+mean(is.na(df$TEdd_Mean))
+mean(is.na(df$AverageDevAbs_TR))
+mean(is.na(df$RatioTD))
+
+hist(df$OTm,breaks=30)
+hist(df$RatioTD,breaks=20)
+hist(log(df$RatioTD),breaks=20)
+
+mean(is.na(df$SDAI_dis))
+
+names(df)
+
+cor(df$RatioTD,df$SDAI_dis,use="pairwise.complete",method="spearman")
+
+cor(df$AverageDevAbs_TR,df$SDAI_dis,use="pairwise.complete",method="spearman")
+cor(df$AverageDevAbs_TR,df$SDAI_dis,use="pairwise.complete",method="spearman")
+
+cor(df$OTm,df$SDAI_dis,use="pairwise.complete",method="spearman")
+cor(df$QSTmt,df$SDAI_dis,use="pairwise.complete",method="spearman")
+cor(df$QSTmp,df$SDAI_dis,use="pairwise.complete",method="spearman")
+cor(df$QSTmp,df$QSTmt,use="pairwise.complete",method="spearman")
+
+# ------------------------------------------------------------------------------ #
+# Questionnaire parents ####
+var = "QSTpadua_parent"
+items = dd$Var_name[dd$Level=="item"&dd$ScaleName==var]
+itemsQstParent = items[!is.na(items)]
+modelQstParent = paste0(gsub(" ","",var),"_lat=~",paste0(itemsQstParent,collapse="+"))
+print(modelQstParent)
+fitQstParent = cfa(model=modelQstParent, data=df, ordered=T)
+fitQstParent@Data
+fitMeasures(fitQstParent,fit.measures=fi)
+modificationIndices(fitQstParent,sort.=T)[1:10,]
+
+mi_line <- "
+QSTp_4_p ~~ QSTp_5_p
+QSTp_2_p ~~ QSTp_6_p
+"
+modelQstParentRev <- paste(c(modelQstParent, mi_line), collapse = "\n")
+fitQstParentRev = cfa(model=modelQstParentRev, data=df, ordered=T)
+fitQstParentRev@Data
+fitMeasures(fitQstParentRev,fit.measures=fi)
+modificationIndices(fitQstParentRev,sort.=T)[1:10,]
+
+# ------------------------------------------------------------------------------ #
+# Questionnaire teachers ####
+var = "QSTmilan_teacher"
+items = dd$Var_name[dd$Level=="item"&dd$ScaleName==var]
+itemsQstTeacher = items[!is.na(items)]
+modelQstTeacher = paste0(gsub(" ","",var),"_lat=~",paste0(itemsQstTeacher,collapse="+"))
+print(modelQstTeacher)
+fitQstTeacher = cfa(model=modelQstTeacher, data=df, ordered=T)
+fitQstTeacher@Data
+fitMeasures(fitQstTeacher,fit.measures=fi)
+modificationIndices(fitQstTeacher,sort.=T)[1:10,]
+
+# ------------------------------------------------------------------------------ #
+# Time Reproduction ####
+dd$Var_name[dd$Construct == "Time Reproduction"]
+
+items = dd$Var_name[dd$ScaleName=="TR"&dd$Level=="item"]
+items = items[!is.na(items) & grepl("PercDevAbs_TR_",items)]
+items
+itemsNorm = paste0("TR",2:12)
+df[,itemsNorm] = NA
+for(i in 1:length(items)) df[,itemsNorm[i]] = normalize(abs(df[,items[i]]))
+model = paste("TR_lat =~",paste(itemsNorm,collapse="+"))
+model
+fit = cfa(model=model, data=df)
+fit@Data
+fitMeasures(fit,fit.measures=fi)
+modificationIndices(fit,sort.=T)[1:10,]
+psych::alpha(df[,itemsNorm])$total$raw_alpha
+corrplot(cor(df[,itemsNorm],use="pairwise.complete",method="pearson"),
+         method = "color",  
+         type = "full",     
+         addCoef.col = "black", 
+         tl.col = "black",  
+         tl.cex = 1, 
+         number.cex = 1)
+
+dfLong = df %>% pivot_longer(cols=all_of(items), names_to="item", values_to="value")
+ggplot(dfLong, aes(x = "", y = value)) +
+  geom_violin() +
+  facet_wrap(~ item, scales = "free") +
+  theme_minimal() +
+  labs(x = NULL, y = "Value", title = "Violin Plots for Selected Items")
+
+normTot <- rowMeans(df[,itemsNorm], na.rm=T)
+baseTot <- rowMeans(abs(df[,items]), na.rm=T)
+normTotNorm <- normalize(normTot)
+cor(normTot,baseTot, use = "complete.obs")
+cor(normTotNorm,baseTot, use = "complete.obs")
+cor(normTot,normTotNorm, use = "complete.obs")
+
+# ------------------------------------------------------------------------------ #
+# Time Orientation #### 
+var = "OTm"
+items = dd$Var_name[dd$Level=="item"&dd$ScaleName==var]
+itemsTimeOt = items[!is.na(items)]
+modelTimeOt = paste0(gsub(" ","",var),"_lat=~",paste0(itemsTimeOt,collapse="+"))
+print(modelTimeOt)
+fitTimeOt = cfa(model=modelTimeOt, data=df, ordered=T)
+fitTimeOt@Data
+fitMeasures(fitTimeOt,fit.measures=fi)
+modificationIndices(fitTimeOt,sort.=T)[1:10,] # Residui correlati item 12 e 14 - unici con risposta sì-no
+
+# ------------------------------------------------------------------------------ #
+# Time Discrimination ####
+dd$Var_name[dd$Construct == "Time Discrimination"]
+df$RatioTD
+
+# ------------------------------------------------------------------------------ #
+# Time Estimation ####
+dd$Var_name[dd$Construct == "Time Estimation"]
+df$TEdd_Mean
+cor(df$TE_Barca,df$TE_Ladro, use = "complete.obs")
+cor(df$TE_Barca_dd,df$TE_Ladro_dd, use = "complete.obs")
+
+
+################################
+
+# Correlations ####
+dcor <- subset(df, select = c(QSTp_Total_parent, QSTm_Total_teacher,
+                              OTm, RatioTD,
+                              TEdd_Mean, AverageDevAbs_TR,
+                              Grade, Gender))
+dcor$AverageDevAbs_TR <- normalize(dcor$AverageDevAbs_TR)
+(corTab<-round(cor(dcor, use = "pairwise.complete"),2))
+corrplot::corrplot(corTab, addCoef.col = "black")
+
+
+# CNORM ####
+library(cNORM)
+
+dcor <- subset(df, select = c(QSTp_Total_parent, QSTm_Total_teacher,
+                              OTm, RatioTD,
+                              TEdd_Mean, AverageDevAbs_TR,
+                              Grade, Gender))
+
+# Using the syntax on the console: The function 'cnorm' performs
+# all steps automatically. Please specify the raw score and the
+# grouping variable. The resulting object contains the ranked data
+# via object$data and the model via object$model.
+
+parQstNorm <- cnorm(raw = dcor$QSTp_Total_parent, group = dcor$Grade)
+
+# Plot different indicators of model fit depending on the number of
+# predictors
+
+plot(parQstNorm, "subset", type=6) # plot R2
+plot(parQstNorm, "subset", type=3) # plot MSE
+
+# NOTE! At this point, you usually select a good fitting model and rerun
+# the process with a fixed number of terms, e. g. 4. Avoid models
+# with a high number of terms:
+
+parQstNorm <- cnorm(raw = dcor$QSTp_Total_parent, group = dcor$Grade,
+                    terms = 4)
+
+# Powers of age can be specified via the parameter 't'.
+# Cubic modeling is usually sufficient, i.e., t = 3.
+# In contrast, 'k' specifies the power of the person location.
+# This parameter should be somewhat higher, e.g., k = 5.
+
+parQstNorm <- cnorm(raw = dcor$QSTp_Total_parent, group = dcor$Grade,
+                    k = 5, t = 2)
+
+# Visual inspection of the percentile curves of the fitted model
+
+plot(parQstNorm, "percentiles")
+
+# Visual inspection of the observed and fitted raw and norm scores
+
+plot(parQstNorm, "norm")
+plot(parQstNorm, "raw")
+
+# In order to compare different models, generate a series of percentile
+# plots with an ascending number of predictors, in this example between
+# 5 and 14 predictors.
+
+plot(parQstNorm, "series", start=5, end=14)
+
+# Cross validation in order to choose appropriate number of terms
+# with 80% of the data for training and 20% for validation. Due to
+# the time consumption, the maximum number of terms is limited to 10
+# in this example with 3 repetitions of the cross validation.
+
+cnorm.cv(parQstNorm$data, max=10, repetitions=3)
+
+# Cross validation with prespecified terms of an already
+# existing model
+
+cnorm.cv(parQstNorm, repetitions=3)
+
+# Print norm table (in this case: 0, 3 or 6 months at grade level 3)
+# (Note: The data is coded such that 3.0 represents the beginning and
+# 3.5 the middle of the third school year)
+
+normTable(c(3, 3.25, 3.5), parQstNorm)

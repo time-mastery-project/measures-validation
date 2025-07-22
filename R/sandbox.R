@@ -11,7 +11,7 @@ library(tidyr)
 library(dplyr)
 library(corrplot)
 source("R/custom-functions.R")
-fi = c("rmsea","cfi","nnfi")
+fi = c("rmsea","srmr","cfi","nnfi")
 
 df = data.frame(read_excel("data/Database_Time_16.05.25_PD&MI.xlsx")); nrow(df)
 df = df[!is.na(df$Class),]; nrow(df)

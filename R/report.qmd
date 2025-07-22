@@ -1,0 +1,484 @@
+---
+title: "report"
+format: html
+editor: visual
+---
+
+## Setup
+
+```{r}
+#| label: setup
+#| message: false
+#| warning: false
+
+rm(list=ls())
+library(readxl)
+library(lavaan)
+library(semTools)
+library(psych)
+library(ggplot2)
+library(tidyr)
+library(dplyr)
+library(corrplot)
+library(here)
+library(reshape2)
+source(here("R/custom-functions.R"))
+fi = c("rmsea","srmr","cfi","nnfi")
+
+df = data.frame(read_excel(here("data/Database_Time_16.05.25_PD&MI.xlsx"))); nrow(df)
+df = df[!is.na(df$Class),]; nrow(df)
+
+dd = data.frame(read_excel(here("data/Data_Dictionary.xlsx")))
+dd$Var_name = gsub("[ °-]",".",dd$Var_name)
+
+```
+
+```{r}
+#| label: scoring
+
+df$OTm = apply(df[,paste0("OTm_",1:16)],1,sum)
+df$QSTmt = apply(df[,paste0("QSTm_",1:10,"_t")],1,sum)
+df$QSTmp = apply(df[,paste0("QSTm_",1:10,"_p")],1,sum)
+
+```
+
+```{r}
+#| label: constructs
+#| eval: false
+#| echo: false
+
+# list of constructs and ratios of complete observations
+tb = as.data.frame(table(dd$ScaleName,dd$Construct))
+tb = tb[tb$Freq!=0,1:2]
+names(tb) = c("Scale","Construct")
+tb$completeObs = NA
+for(i in 1:nrow(tb)){
+  x = dd$Var_name[dd$ScaleName==tb$Scale[i] & dd$Construct==tb$Construct[i]]; x = x[!is.na(x)]
+  tb$completeObs[i] = round(mean(rowMeans(!is.na(df[,x]))),3)
+}; tb
+```
+
+## Descriptives
+
+```{r}
+#| label: descriptives
+length(unique(df$School)); length(unique(df$Class))
+table(df$Grade)
+```
+
+# Scales analysis
+
+## Time sense parents
+
+Parents responded to 10 items regarding their children sense of time. The items were on a 4-point Likert scale and, as clear from @fig-qst-parents, the response distribution was extremely skewed with parents almost never reporting extremely high negative values.
+
+```{r}
+#| label: fig-qst-parents
+
+var = "QSTpadua_parent"
+items = dd$Var_name[dd$Level=="item"&dd$ScaleName==var]
+itemsQstParent = items[!is.na(items)]
+
+df_melted <- melt(df, 
+                  id.vars = c("Grade", "Gender", "Code", "Age"),
+                  measure.vars = itemsQstParent)
+
+ggplot(df_melted, aes(x = value)) +
+  geom_histogram(binwidth = .5, fill = "orange", color = "black") +
+  facet_wrap(~variable, ncol = 5)
+```
+
+Given the properties of the Likert distribution, we thus fit a single-factor CFA using DWLS estimation for ordinal data.
+
+```{r}
+#| label: model-qst-parents
+modelQstParent = paste0(gsub(" ","",var),"_lat=~",paste0(itemsQstParent,collapse="+"))
+print(modelQstParent)
+fitQstParent = cfa(model=modelQstParent, data=df, ordered=T)
+fitQstParent@Data
+fitMeasures(fitQstParent,fit.measures=fi)
+modificationIndices(fitQstParent,sort.=T)[1:10,]
+```
+
+The model, however, does not have a great fit. Inspecting modification indices, it clearly appears that positive items (see also the distributions of items 1,2,4,5,6) are more similar than it should be.
+
+I added two covariances, but this does not help much. Modeling covariance across all the positive items gives a perfect fit, but loadings of positive items almost disappear.
+
+```{r}
+#| label: model-parents-mi
+
+mi_line <- "
+QSTp_4_p ~~ QSTp_5_p
+QSTp_2_p ~~ QSTp_6_p
+"
+# mi_line <- "
+# QSTp_1_p ~~ QSTp_2_p+QSTp_4_p+QSTp_5_p+QSTp_6_p
+# QSTp_2_p ~~ QSTp_4_p+QSTp_5_p+QSTp_6_p
+# QSTp_4_p ~~ QSTp_5_p+QSTp_6_p
+# QSTp_5_p ~~ QSTp_6_p
+# 
+# QSTp_3_p ~~ QSTp_7_p+QSTp_8_p+QSTp_9_p+QSTp_10_p
+# QSTp_7_p ~~ QSTp_8_p+QSTp_9_p+QSTp_10_p
+# QSTp_8_p ~~ QSTp_9_p+QSTp_10_p
+# QSTp_9_p ~~ QSTp_10_p
+# "
+
+modelQstParentRev <- paste(c(modelQstParent, mi_line), collapse = "\n")
+fitQstParentRev = cfa(model=modelQstParentRev, data=df, ordered=T, orthogonal = T)
+fitMeasures(fitQstParentRev,fit.measures=fi)
+# summary(fitQstParentRev,std=T)
+```
+
+An alternative solution might be fitting a two-factor model. This has optimal fit indices, however, the correlation between the two LV is very low (.14). Fitting a hierarchical model raises convergence issues.
+
+```{r}
+#| label: model-parents-two
+
+model2 <- "
+qstp1 =~ QSTp_1_p+QSTp_2_p+QSTp_4_p+QSTp_5_p+QSTp_6_p
+qstp2 =~ QSTp_3_p+QSTp_7_p+QSTp_8_p+QSTp_9_p+QSTp_10_p
+qstp1~~qstp2
+# qst=~qstp1+qstp2
+"
+
+fitQstParent2 = cfa(model=model2, data=df, ordered=T, std.lv=T)
+fitMeasures(fitQstParent2,fit.measures=fi)
+# summary(fitQstParent2,std=T)
+```
+
+In any case, the questionnaire shows good reliability:
+
+```{r}
+#| label: parent-rel
+#| warning: false
+psych::alpha(df[,itemsQstParent], check.keys = TRUE)$total$raw_alpha
+```
+
+## Time sense teachers
+
+As for the parent questionnaire, teachers responded to 10 items on a 4-point Likert scale. In this case, however, we only have positively-keyed items and, with the exception of items 1, 6, and 10 (@fig-qst-teachers), most answers receive the highest score.
+
+```{r}
+#| label: fig-qst-teachers
+
+# Questionnaire teachers ####
+var = "QSTmilan_teacher"
+items = dd$Var_name[dd$Level=="item"&dd$ScaleName==var]
+itemsQstTeacher = items[!is.na(items)]
+
+df_melted <- melt(df, 
+                  id.vars = c("Grade", "Gender", "Code", "Age"),
+                  measure.vars = itemsQstTeacher)
+
+ggplot(df_melted, aes(x = value)) +
+  geom_histogram(binwidth = .5, fill = "orange", color = "black") +
+  facet_wrap(~variable, ncol = 5)
+```
+
+Differently from the parents' questionnaire, teachers' scale shows excellent fit to the data.
+
+```{r}
+#| label: model-qst-teachers
+modelQstTeacher = paste0(gsub(" ","",var),"_lat=~",paste0(itemsQstTeacher,collapse="+"))
+print(modelQstTeacher)
+fitQstTeacher = cfa(model=modelQstTeacher, data=df, ordered=T)
+fitQstTeacher@Data
+fitMeasures(fitQstTeacher,fit.measures=fi)
+```
+
+The questionnaire also shows good reliability:
+
+```{r}
+#| label: teacher-rel
+#| warning: false
+psych::alpha(df[,itemsQstTeacher], check.keys = FALSE)$total$raw_alpha
+```
+
+## Time reproduction
+
+For time reproduction, children perceived 12 time sequences and reproduced them. The scores are calculated as the absolute value of the ratio between reproduced and correct time.
+
+This, however, generate an extremely skewed distribution of the scores (see @fig-tr-raw). Hence, we transformed the items before analysis.
+
+```{r}
+#| label: fig-tr-raw
+#| cache: true
+# dd$Var_name[dd$Construct == "Time Reproduction"]
+items = dd$Var_name[dd$ScaleName=="TR"&dd$Level=="item"]
+items = items[!is.na(items) & grepl("PercDevAbs_TR_",items)]
+
+df_melted <- melt(df, 
+                  id.vars = c("Grade", "Gender", "Code", "Age"),
+                  measure.vars = items)
+
+ggplot(df_melted, aes(x = value)) +
+  geom_histogram(binwidth = .5, fill = "orange", color = "black") +
+  facet_wrap(~variable, ncol = 4)
+```
+
+Specifically, a quantile transformation was used to normalize the data (see @fig-tr-norm).
+
+```{r}
+#| label: fig-tr-norm
+
+itemsNorm = paste0("TR",2:12)
+df[,itemsNorm] = NA
+for(i in 1:length(items)) df[,itemsNorm[i]] = normalize(abs(df[,items[i]]))
+
+df_melted <- melt(df, 
+                  id.vars = c("Grade", "Gender", "Code", "Age"),
+                  measure.vars = itemsNorm)
+
+ggplot(df_melted, aes(x = value)) +
+  geom_histogram(binwidth = .5, fill = "orange", color = "black") +
+  facet_wrap(~variable, ncol = 4)
+```
+
+The CFA model fit using the normalized items shows, as expected, a good fit to the data.
+
+```{r}
+#| label: model-tr
+model = paste("TR_lat =~",paste(itemsNorm,collapse="+"))
+model
+fit = cfa(model=model, data=df)
+fit@Data
+fitMeasures(fit,fit.measures=fi)
+# modificationIndices(fit,sort.=T)[1:10,]
+```
+
+The items are also reliable:
+
+```{r}
+#| label: rel-tr
+#| warning: false
+
+psych::alpha(df[,itemsNorm])$total$raw_alpha
+
+```
+
+And well correlated (both when normalized \[above the diagonal\] and raw \[below\], see @fig-tr-cor):
+
+```{r}
+#| label: fig-tr-cor
+corTabTrNorm <- cor(df[,itemsNorm],use="pairwise.complete",method="pearson")
+corTabTrRaw <- cor(df[,items],use="pairwise.complete",method="spearman")
+corTabTr <- corTabTrRaw  # start with raw (lower triangle)
+corTabTr[upper.tri(corTabTr)] <- corTabTrNorm[upper.tri(corTabTrNorm)]
+corrplot(corTabTr,
+         method = "color",  
+         type = "full",     
+         addCoef.col = "black", 
+         tl.col = "black")
+```
+
+## Time orientation
+
+The time orientation questionnaire is composed of 16 questions about time knowledge, understanding, and use. Items are scored as 1 if correct or 0 if wrong. The first block of items appear easier than the second block (@fig-time-orientation).
+
+```{r}
+#| label: fig-time-orientation
+
+# Time Orientation #### 
+var = "OTm"
+items = dd$Var_name[dd$Level=="item"&dd$ScaleName==var]
+itemsTimeOt = items[!is.na(items)]
+
+df_melted <- melt(df, 
+                  id.vars = c("Grade", "Gender", "Code", "Age"),
+                  measure.vars = itemsTimeOt)
+
+ggplot(df_melted, aes(x = value)) +
+  geom_histogram(binwidth = .5, fill = "orange", color = "black") +
+  facet_wrap(~variable, ncol = 8)
+
+```
+
+As before, we fit again a CFA on this data using DWLS estimation for ordered categories (0/1). The model fits the data quite well, yet there is room for improvement and modification indices highlight residual correlations between items 12 and 14, which are the only two with yes/no response.
+
+```{r}
+#| label: model-time-orientation
+modelTimeOt = paste0(gsub(" ","",var),"_lat=~",paste0(itemsTimeOt,collapse="+"))
+print(modelTimeOt)
+fitTimeOt = cfa(model=modelTimeOt, data=df, ordered=T)
+fitTimeOt@Data
+fitMeasures(fitTimeOt,fit.measures=fi)
+modificationIndices(fitTimeOt,sort.=T)[1:10,] # Residui correlati item 12 e 14 - unici con risposta sì-no
+```
+
+Adding the covariance between items 12 and 14 improves model fit:
+
+```{r}
+#| label: model-time-orientation-mi
+mi_line <- "
+OTm_12	~~	OTm_14
+"
+
+modelTimeOtRev <- paste(c(modelTimeOt, mi_line), collapse = "\n")
+fitTimeOtRev = cfa(model=modelTimeOtRev, data=df, ordered=T)
+fitMeasures(fitTimeOtRev,fit.measures=fi)
+```
+
+The scale has also decent internal consistency for a 0-1 scale:
+
+```{r}
+#| label: time-orientation-rel
+#| warning: false
+psych::alpha(df[,itemsTimeOt], check.keys = TRUE)$total$raw_alpha
+```
+
+And a good one considering ordinal reliability:
+
+```{r}
+#| warning: false
+#| message: false
+semTools::reliability(fitTimeOtRev)[2,]
+```
+
+## Time discrimination and estimation
+
+The two tests measuring time discrimination and estimation cannot be modeled using factor analyses as they are either composed by two items (time estimation) or return a single score based on the lowest discrimination ratio calculated with adaptive processes.
+
+### Time discrimination
+
+For time discrimination, the distribution of the scores is again very skewed (see @fig-td), with most children scoring between 1 and 1.5.
+
+```{r}
+#| label: fig-td
+# dd$Var_name[dd$Construct == "Time Discrimination"]
+
+ggplot(df, aes(x = RatioTD)) +
+  geom_histogram(binwidth = .02, 
+                 fill = "orange", color = "black") 
+```
+
+### Time estimation
+
+For time estimation, the score is given by the absolute difference (in seconds) from the correct answer. The distribution of the scores is again very skewed (see @fig-te).
+
+```{r}
+#| label: fig-te
+# Time Estimation ####
+# dd$Var_name[dd$Construct == "Time Estimation"]
+teItems <- c("TE_Barca_dd","TE_Ladro","TEdd_Mean")
+
+df_melted <- melt(df, 
+                  id.vars = c("Grade", "Gender", "Code", "Age"),
+                  measure.vars = teItems)
+
+ggplot(df_melted, aes(x = value)) +
+  geom_histogram(binwidth = .5, fill = "orange", color = "black") +
+  facet_wrap(~variable)
+```
+
+The correlations between the two items is very high, suggesting that common factors explained children performance in both items.
+
+```{r}
+#| label: te-cor
+cor(df$TE_Barca_dd,df$TE_Ladro_dd, use = "complete.obs")
+```
+
+# Convergence of the scales
+
+## Correlations
+
+With the exception of the time estimation score, the time scales are all correlated between each other and with participants' grade, but not with gender (@fig-raw-cor).
+
+```{r}
+#| label: fig-raw-cor
+dcor <- subset(df, select = c(QSTp_Total_parent, QSTm_Total_teacher,
+                              OTm, RatioTD,
+                              TEdd_Mean, AverageDevAbs_TR,
+                              Grade, Gender))
+# dcor$AverageDevAbs_TR <- normalize(dcor$AverageDevAbs_TR)
+corrplot::corrplot(cor(dcor, use = "pairwise.complete"), addCoef.col = "black")
+```
+
+However, the scales are generally skewed (@fig-raw-tot). Hence, we normalized them (see @fig-norm-tot) and calculated the correlations again.
+
+```{r}
+#| label: fig-raw-tot
+df_melted_raw <- melt(dcor, 
+                  id.vars = c("Grade", "Gender"))
+
+ggplot(df_melted_raw, aes(x = value)) +
+  geom_histogram(bins = 100, fill = "orange", color = "black") +
+  facet_wrap(~variable, scales = "free")
+```
+
+```{r}
+#| label: fig-norm-tot
+totalNorm = paste0("norm_",unique(df_melted_raw$variable))
+totalRaw = as.character(unique(df_melted_raw$variable))
+df[,totalNorm] = NA
+for(i in 1:length(unique(df_melted_raw$variable))) df[,totalNorm[i]] = normalize(abs(df[,totalRaw[i]]))
+
+df_melted_norm <- melt(df, 
+                  id.vars = c("Grade", "Gender", "Code", "Age"),
+                  measure.vars = totalNorm)
+
+ggplot(df_melted_norm, aes(x = value)) +
+  geom_histogram(binwidth = .5, fill = "orange", color = "black") +
+  facet_wrap(~variable, ncol = 3)
+```
+
+The correlations were almost identical, however, the time estimation score is nor well correlated with the other factors (@fig-norm-cor).
+
+```{r}
+#| label: fig-norm-cor
+dcor2 <- df[,c(totalNorm,"Grade","Gender")]
+corrplot::corrplot(cor(dcor2, use = "pairwise.complete"), addCoef.col = "black")
+```
+
+## Factor structure
+
+We may view the different factors measured as indicator of a general factor of time. This might be modeled as a CFA.
+
+```{r}
+#| label: general-factor-model
+g_model = paste("g =~",paste(totalNorm,collapse="+"))
+g_model
+fit = cfa(model=g_model, data=df, missing = "fiml",std.lv=T)
+fit@Data
+fitMeasures(fit,fit.measures=fi)
+modificationIndices(fit,sort.=T)[1:10,]
+```
+
+The model shows acceptable, yet quite low, fit indices. MI suggest that time discrimination and time reproduction scores may be more similar between each other than with other factors. This makes sense as the two have quite similar requests. With this specification, the model shows excellent fit to the data.
+
+```{r}
+#| label: general-factor-model-mi
+mi_line <- "
+norm_RatioTD	~~	norm_AverageDevAbs_TR
+"
+
+g_model <- paste(c(g_model, mi_line), collapse = "\n")
+fit = cfa(model=g_model, data=df, missing = "fiml",std.lv=T)
+fitMeasures(fit,fit.measures=fi)
+```
+
+```{r}
+#| label: general-factor-model-mi-summary
+
+summary(fit,std=T)
+```
+
+# Time trends
+
+Across primary schools, we expect the time scores to increase, possibly linearly, but probably not. @fig-trend-raw shows the age trend of the six scales:
+
+```{r}
+#| label: fig-trend-raw
+#| warning: false
+ggplot(df_melted_raw, aes(y = value, x = Grade)) +
+  geom_smooth() + 
+  facet_wrap(~variable, ncol = 3, scales = "free")
+```
+
+
+
+
+```{r}
+# ggplot(df_melted_norm, aes(y = value, x = Grade)) +
+#   geom_smooth() + 
+#   facet_wrap(~variable, ncol = 3, scales = "free")
+```

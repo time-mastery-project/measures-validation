@@ -1,0 +1,1267 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.7.31">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+
+<title>report</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+</style>
+
+
+<script src="report_files/libs/clipboard/clipboard.min.js"></script>
+<script src="report_files/libs/quarto-html/quarto.js" type="module"></script>
+<script src="report_files/libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="report_files/libs/quarto-html/popper.min.js"></script>
+<script src="report_files/libs/quarto-html/tippy.umd.min.js"></script>
+<script src="report_files/libs/quarto-html/anchor.min.js"></script>
+<link href="report_files/libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="report_files/libs/quarto-html/quarto-syntax-highlighting-e1a5c8363afafaef2c763b6775fbf3ca.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="report_files/libs/bootstrap/bootstrap.min.js"></script>
+<link href="report_files/libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="report_files/libs/bootstrap/bootstrap-bb462d781dde1847d9e3ccf7736099dd.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+
+
+</head>
+
+<body class="fullcontent quarto-light">
+
+<div id="quarto-content" class="page-columns page-rows-contents page-layout-article">
+
+<main class="content" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<h1 class="title">report</h1>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<section id="setup" class="level2">
+<h2 class="anchored" data-anchor-id="setup">Setup</h2>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">rm</span>(<span class="at">list=</span><span class="fu">ls</span>())</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(readxl)</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(lavaan)</span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(semTools)</span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(psych)</span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(ggplot2)</span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(tidyr)</span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(dplyr)</span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(corrplot)</span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(here)</span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(reshape2)</span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a><span class="fu">source</span>(<span class="fu">here</span>(<span class="st">"R/custom-functions.R"</span>))</span>
+<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a>fi <span class="ot">=</span> <span class="fu">c</span>(<span class="st">"rmsea"</span>,<span class="st">"srmr"</span>,<span class="st">"cfi"</span>,<span class="st">"nnfi"</span>)</span>
+<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a>df <span class="ot">=</span> <span class="fu">data.frame</span>(<span class="fu">read_excel</span>(<span class="fu">here</span>(<span class="st">"data/Database_Time_16.05.25_PD&amp;MI.xlsx"</span>))); <span class="fu">nrow</span>(df)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] 717</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb3"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>df <span class="ot">=</span> df[<span class="sc">!</span><span class="fu">is.na</span>(df<span class="sc">$</span>Class),]; <span class="fu">nrow</span>(df)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] 700</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb5"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>dd <span class="ot">=</span> <span class="fu">data.frame</span>(<span class="fu">read_excel</span>(<span class="fu">here</span>(<span class="st">"data/Data_Dictionary.xlsx"</span>)))</span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>dd<span class="sc">$</span>Var_name <span class="ot">=</span> <span class="fu">gsub</span>(<span class="st">"[ °-]"</span>,<span class="st">"."</span>,dd<span class="sc">$</span>Var_name)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb6"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>df<span class="sc">$</span>OTm <span class="ot">=</span> <span class="fu">apply</span>(df[,<span class="fu">paste0</span>(<span class="st">"OTm_"</span>,<span class="dv">1</span><span class="sc">:</span><span class="dv">16</span>)],<span class="dv">1</span>,sum)</span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>df<span class="sc">$</span>QSTmt <span class="ot">=</span> <span class="fu">apply</span>(df[,<span class="fu">paste0</span>(<span class="st">"QSTm_"</span>,<span class="dv">1</span><span class="sc">:</span><span class="dv">10</span>,<span class="st">"_t"</span>)],<span class="dv">1</span>,sum)</span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>df<span class="sc">$</span>QSTmp <span class="ot">=</span> <span class="fu">apply</span>(df[,<span class="fu">paste0</span>(<span class="st">"QSTm_"</span>,<span class="dv">1</span><span class="sc">:</span><span class="dv">10</span>,<span class="st">"_p"</span>)],<span class="dv">1</span>,sum)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</section>
+<section id="descriptives" class="level2">
+<h2 class="anchored" data-anchor-id="descriptives">Descriptives</h2>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb7"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="fu">length</span>(<span class="fu">unique</span>(df<span class="sc">$</span>School)); <span class="fu">length</span>(<span class="fu">unique</span>(df<span class="sc">$</span>Class))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] 14</code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] 50</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb10"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="fu">table</span>(df<span class="sc">$</span>Grade)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>
+  1   2   3   4   5 
+ 55 132 231 186  96 </code></pre>
+</div>
+</div>
+</section>
+<section id="scales-analysis" class="level1">
+<h1>Scales analysis</h1>
+<section id="time-sense-parents" class="level2">
+<h2 class="anchored" data-anchor-id="time-sense-parents">Time sense parents</h2>
+<p>Parents responded to 10 items regarding their children sense of time. The items were on a 4-point Likert scale and, as clear from <a href="#fig-qst-parents" class="quarto-xref">Figure&nbsp;1</a>, the response distribution was extremely skewed with parents almost never reporting extremely high negative values.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb12"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a>var <span class="ot">=</span> <span class="st">"QSTpadua_parent"</span></span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a>items <span class="ot">=</span> dd<span class="sc">$</span>Var_name[dd<span class="sc">$</span>Level<span class="sc">==</span><span class="st">"item"</span><span class="sc">&amp;</span>dd<span class="sc">$</span>ScaleName<span class="sc">==</span>var]</span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a>itemsQstParent <span class="ot">=</span> items[<span class="sc">!</span><span class="fu">is.na</span>(items)]</span>
+<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a>df_melted <span class="ot">&lt;-</span> <span class="fu">melt</span>(df, </span>
+<span id="cb12-6"><a href="#cb12-6" aria-hidden="true" tabindex="-1"></a>                  <span class="at">id.vars =</span> <span class="fu">c</span>(<span class="st">"Grade"</span>, <span class="st">"Gender"</span>, <span class="st">"Code"</span>, <span class="st">"Age"</span>),</span>
+<span id="cb12-7"><a href="#cb12-7" aria-hidden="true" tabindex="-1"></a>                  <span class="at">measure.vars =</span> itemsQstParent)</span>
+<span id="cb12-8"><a href="#cb12-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-9"><a href="#cb12-9" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(df_melted, <span class="fu">aes</span>(<span class="at">x =</span> value)) <span class="sc">+</span></span>
+<span id="cb12-10"><a href="#cb12-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_histogram</span>(<span class="at">binwidth =</span> .<span class="dv">5</span>, <span class="at">fill =</span> <span class="st">"orange"</span>, <span class="at">color =</span> <span class="st">"black"</span>) <span class="sc">+</span></span>
+<span id="cb12-11"><a href="#cb12-11" aria-hidden="true" tabindex="-1"></a>  <span class="fu">facet_wrap</span>(<span class="sc">~</span>variable, <span class="at">ncol =</span> <span class="dv">5</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>Warning: Removed 2893 rows containing non-finite outside the scale range
+(`stat_bin()`).</code></pre>
+</div>
+<div class="cell-output-display">
+<div id="fig-qst-parents" class="quarto-float quarto-figure quarto-figure-center anchored" width="672">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-qst-parents-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="report_files/figure-html/fig-qst-parents-1.png" id="fig-qst-parents" class="img-fluid figure-img" width="672">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig quarto-uncaptioned" id="fig-qst-parents-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;1
+</figcaption>
+</figure>
+</div>
+</div>
+</div>
+<p>Given the properties of the Likert distribution, we thus fit a single-factor CFA using DWLS estimation for ordinal data.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb14"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a>modelQstParent <span class="ot">=</span> <span class="fu">paste0</span>(<span class="fu">gsub</span>(<span class="st">" "</span>,<span class="st">""</span>,var),<span class="st">"_lat=~"</span>,<span class="fu">paste0</span>(itemsQstParent,<span class="at">collapse=</span><span class="st">"+"</span>))</span>
+<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a><span class="fu">print</span>(modelQstParent)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] "QSTpadua_parent_lat=~QSTp_1_p+QSTp_2_p+QSTp_3_p+QSTp_4_p+QSTp_5_p+QSTp_6_p+QSTp_7_p+QSTp_8_p+QSTp_9_p+QSTp_10_p"</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb16"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a>fitQstParent <span class="ot">=</span> <span class="fu">cfa</span>(<span class="at">model=</span>modelQstParent, <span class="at">data=</span>df, <span class="at">ordered=</span>T)</span>
+<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a>fitQstParent<span class="sc">@</span>Data</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>                                                  Used       Total
+  Number of observations                           408         700</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb18"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a><span class="fu">fitMeasures</span>(fitQstParent,<span class="at">fit.measures=</span>fi)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>rmsea  srmr   cfi  nnfi 
+0.254 0.229 0.920 0.897 </code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb20"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a><span class="fu">modificationIndices</span>(fitQstParent,<span class="at">sort.=</span>T)[<span class="dv">1</span><span class="sc">:</span><span class="dv">10</span>,]</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>         lhs op      rhs      mi    epc sepc.lv sepc.all sepc.nox
+97  QSTp_4_p ~~ QSTp_5_p 105.102 -0.474  -0.474   -0.555   -0.555
+85  QSTp_2_p ~~ QSTp_6_p  92.387 -0.482  -0.482   -0.570   -0.570
+84  QSTp_2_p ~~ QSTp_5_p  77.959 -0.427  -0.427   -0.499   -0.499
+103 QSTp_5_p ~~ QSTp_6_p  73.478 -0.404  -0.404   -0.483   -0.483
+76  QSTp_1_p ~~ QSTp_5_p  70.558 -0.427  -0.427   -0.495   -0.495
+73  QSTp_1_p ~~ QSTp_2_p  65.965 -0.438  -0.438   -0.504   -0.504
+83  QSTp_2_p ~~ QSTp_4_p  54.775 -0.393  -0.393   -0.455   -0.455
+75  QSTp_1_p ~~ QSTp_4_p  52.956 -0.378  -0.378   -0.435   -0.435
+98  QSTp_4_p ~~ QSTp_6_p  45.184 -0.358  -0.358   -0.424   -0.424
+88  QSTp_2_p ~~ QSTp_9_p  30.761 -0.396  -0.396   -0.962   -0.962</code></pre>
+</div>
+</div>
+<p>The model, however, does not have a great fit. Inspecting modification indices, it clearly appears that positive items (see also the distributions of items 1,2,4,5,6) are more similar than it should be.</p>
+<p>I added two covariances, but this does not help much. Modeling covariance across all the positive items gives a perfect fit, but loadings of positive items almost disappear.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb22"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a>mi_line <span class="ot">&lt;-</span> <span class="st">"</span></span>
+<span id="cb22-2"><a href="#cb22-2" aria-hidden="true" tabindex="-1"></a><span class="st">QSTp_4_p ~~ QSTp_5_p</span></span>
+<span id="cb22-3"><a href="#cb22-3" aria-hidden="true" tabindex="-1"></a><span class="st">QSTp_2_p ~~ QSTp_6_p</span></span>
+<span id="cb22-4"><a href="#cb22-4" aria-hidden="true" tabindex="-1"></a><span class="st">"</span></span>
+<span id="cb22-5"><a href="#cb22-5" aria-hidden="true" tabindex="-1"></a><span class="co"># mi_line &lt;- "</span></span>
+<span id="cb22-6"><a href="#cb22-6" aria-hidden="true" tabindex="-1"></a><span class="co"># QSTp_1_p ~~ QSTp_2_p+QSTp_4_p+QSTp_5_p+QSTp_6_p</span></span>
+<span id="cb22-7"><a href="#cb22-7" aria-hidden="true" tabindex="-1"></a><span class="co"># QSTp_2_p ~~ QSTp_4_p+QSTp_5_p+QSTp_6_p</span></span>
+<span id="cb22-8"><a href="#cb22-8" aria-hidden="true" tabindex="-1"></a><span class="co"># QSTp_4_p ~~ QSTp_5_p+QSTp_6_p</span></span>
+<span id="cb22-9"><a href="#cb22-9" aria-hidden="true" tabindex="-1"></a><span class="co"># QSTp_5_p ~~ QSTp_6_p</span></span>
+<span id="cb22-10"><a href="#cb22-10" aria-hidden="true" tabindex="-1"></a><span class="co"># </span></span>
+<span id="cb22-11"><a href="#cb22-11" aria-hidden="true" tabindex="-1"></a><span class="co"># QSTp_3_p ~~ QSTp_7_p+QSTp_8_p+QSTp_9_p+QSTp_10_p</span></span>
+<span id="cb22-12"><a href="#cb22-12" aria-hidden="true" tabindex="-1"></a><span class="co"># QSTp_7_p ~~ QSTp_8_p+QSTp_9_p+QSTp_10_p</span></span>
+<span id="cb22-13"><a href="#cb22-13" aria-hidden="true" tabindex="-1"></a><span class="co"># QSTp_8_p ~~ QSTp_9_p+QSTp_10_p</span></span>
+<span id="cb22-14"><a href="#cb22-14" aria-hidden="true" tabindex="-1"></a><span class="co"># QSTp_9_p ~~ QSTp_10_p</span></span>
+<span id="cb22-15"><a href="#cb22-15" aria-hidden="true" tabindex="-1"></a><span class="co"># "</span></span>
+<span id="cb22-16"><a href="#cb22-16" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb22-17"><a href="#cb22-17" aria-hidden="true" tabindex="-1"></a>modelQstParentRev <span class="ot">&lt;-</span> <span class="fu">paste</span>(<span class="fu">c</span>(modelQstParent, mi_line), <span class="at">collapse =</span> <span class="st">"</span><span class="sc">\n</span><span class="st">"</span>)</span>
+<span id="cb22-18"><a href="#cb22-18" aria-hidden="true" tabindex="-1"></a>fitQstParentRev <span class="ot">=</span> <span class="fu">cfa</span>(<span class="at">model=</span>modelQstParentRev, <span class="at">data=</span>df, <span class="at">ordered=</span>T, <span class="at">orthogonal =</span> T)</span>
+<span id="cb22-19"><a href="#cb22-19" aria-hidden="true" tabindex="-1"></a><span class="fu">fitMeasures</span>(fitQstParentRev,<span class="at">fit.measures=</span>fi)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>rmsea  srmr   cfi  nnfi 
+0.231 0.193 0.938 0.915 </code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb24"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a><span class="co"># summary(fitQstParentRev,std=T)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>An alternative solution might be fitting a two-factor model. This has optimal fit indices, however, the correlation between the two LV is very low (.14). Fitting a hierarchical model raises convergence issues.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb25"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a>model2 <span class="ot">&lt;-</span> <span class="st">"</span></span>
+<span id="cb25-2"><a href="#cb25-2" aria-hidden="true" tabindex="-1"></a><span class="st">qstp1 =~ QSTp_1_p+QSTp_2_p+QSTp_4_p+QSTp_5_p+QSTp_6_p</span></span>
+<span id="cb25-3"><a href="#cb25-3" aria-hidden="true" tabindex="-1"></a><span class="st">qstp2 =~ QSTp_3_p+QSTp_7_p+QSTp_8_p+QSTp_9_p+QSTp_10_p</span></span>
+<span id="cb25-4"><a href="#cb25-4" aria-hidden="true" tabindex="-1"></a><span class="st">qstp1~~qstp2</span></span>
+<span id="cb25-5"><a href="#cb25-5" aria-hidden="true" tabindex="-1"></a><span class="st"># qst=~qstp1+qstp2</span></span>
+<span id="cb25-6"><a href="#cb25-6" aria-hidden="true" tabindex="-1"></a><span class="st">"</span></span>
+<span id="cb25-7"><a href="#cb25-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-8"><a href="#cb25-8" aria-hidden="true" tabindex="-1"></a>fitQstParent2 <span class="ot">=</span> <span class="fu">cfa</span>(<span class="at">model=</span>model2, <span class="at">data=</span>df, <span class="at">ordered=</span>T, <span class="at">std.lv=</span>T)</span>
+<span id="cb25-9"><a href="#cb25-9" aria-hidden="true" tabindex="-1"></a><span class="fu">fitMeasures</span>(fitQstParent2,<span class="at">fit.measures=</span>fi)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>rmsea  srmr   cfi  nnfi 
+0.000 0.042 1.000 1.000 </code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb27"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb27-1"><a href="#cb27-1" aria-hidden="true" tabindex="-1"></a><span class="co"># summary(fitQstParent2,std=T)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>In any case, the questionnaire shows good reliability:</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb28"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb28-1"><a href="#cb28-1" aria-hidden="true" tabindex="-1"></a>psych<span class="sc">::</span><span class="fu">alpha</span>(df[,itemsQstParent], <span class="at">check.keys =</span> <span class="cn">TRUE</span>)<span class="sc">$</span>total<span class="sc">$</span>raw_alpha</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] 0.7944764</code></pre>
+</div>
+</div>
+</section>
+<section id="time-sense-teachers" class="level2">
+<h2 class="anchored" data-anchor-id="time-sense-teachers">Time sense teachers</h2>
+<p>As for the parent questionnaire, teachers responded to 10 items on a 4-point Likert scale. In this case, however, we only have positively-keyed items and, with the exception of items 1, 6, and 10 (<a href="#fig-qst-teachers" class="quarto-xref">Figure&nbsp;2</a>), most answers receive the highest score.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb30"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb30-1"><a href="#cb30-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Questionnaire teachers ####</span></span>
+<span id="cb30-2"><a href="#cb30-2" aria-hidden="true" tabindex="-1"></a>var <span class="ot">=</span> <span class="st">"QSTmilan_teacher"</span></span>
+<span id="cb30-3"><a href="#cb30-3" aria-hidden="true" tabindex="-1"></a>items <span class="ot">=</span> dd<span class="sc">$</span>Var_name[dd<span class="sc">$</span>Level<span class="sc">==</span><span class="st">"item"</span><span class="sc">&amp;</span>dd<span class="sc">$</span>ScaleName<span class="sc">==</span>var]</span>
+<span id="cb30-4"><a href="#cb30-4" aria-hidden="true" tabindex="-1"></a>itemsQstTeacher <span class="ot">=</span> items[<span class="sc">!</span><span class="fu">is.na</span>(items)]</span>
+<span id="cb30-5"><a href="#cb30-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb30-6"><a href="#cb30-6" aria-hidden="true" tabindex="-1"></a>df_melted <span class="ot">&lt;-</span> <span class="fu">melt</span>(df, </span>
+<span id="cb30-7"><a href="#cb30-7" aria-hidden="true" tabindex="-1"></a>                  <span class="at">id.vars =</span> <span class="fu">c</span>(<span class="st">"Grade"</span>, <span class="st">"Gender"</span>, <span class="st">"Code"</span>, <span class="st">"Age"</span>),</span>
+<span id="cb30-8"><a href="#cb30-8" aria-hidden="true" tabindex="-1"></a>                  <span class="at">measure.vars =</span> itemsQstTeacher)</span>
+<span id="cb30-9"><a href="#cb30-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb30-10"><a href="#cb30-10" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(df_melted, <span class="fu">aes</span>(<span class="at">x =</span> value)) <span class="sc">+</span></span>
+<span id="cb30-11"><a href="#cb30-11" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_histogram</span>(<span class="at">binwidth =</span> .<span class="dv">5</span>, <span class="at">fill =</span> <span class="st">"orange"</span>, <span class="at">color =</span> <span class="st">"black"</span>) <span class="sc">+</span></span>
+<span id="cb30-12"><a href="#cb30-12" aria-hidden="true" tabindex="-1"></a>  <span class="fu">facet_wrap</span>(<span class="sc">~</span>variable, <span class="at">ncol =</span> <span class="dv">5</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>Warning: Removed 430 rows containing non-finite outside the scale range
+(`stat_bin()`).</code></pre>
+</div>
+<div class="cell-output-display">
+<div id="fig-qst-teachers" class="quarto-float quarto-figure quarto-figure-center anchored" width="672">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-qst-teachers-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="report_files/figure-html/fig-qst-teachers-1.png" id="fig-qst-teachers" class="img-fluid figure-img" width="672">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig quarto-uncaptioned" id="fig-qst-teachers-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;2
+</figcaption>
+</figure>
+</div>
+</div>
+</div>
+<p>Differently from the parents’ questionnaire, teachers’ scale shows excellent fit to the data.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb32"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb32-1"><a href="#cb32-1" aria-hidden="true" tabindex="-1"></a>modelQstTeacher <span class="ot">=</span> <span class="fu">paste0</span>(<span class="fu">gsub</span>(<span class="st">" "</span>,<span class="st">""</span>,var),<span class="st">"_lat=~"</span>,<span class="fu">paste0</span>(itemsQstTeacher,<span class="at">collapse=</span><span class="st">"+"</span>))</span>
+<span id="cb32-2"><a href="#cb32-2" aria-hidden="true" tabindex="-1"></a><span class="fu">print</span>(modelQstTeacher)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] "QSTmilan_teacher_lat=~QSTm_1_t+QSTm_2_t+QSTm_3_t+QSTm_4_t+QSTm_5_t+QSTm_6_t+QSTm_7_t+QSTm_8_t+QSTm_9_t+QSTm_10_t"</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb34"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb34-1"><a href="#cb34-1" aria-hidden="true" tabindex="-1"></a>fitQstTeacher <span class="ot">=</span> <span class="fu">cfa</span>(<span class="at">model=</span>modelQstTeacher, <span class="at">data=</span>df, <span class="at">ordered=</span>T)</span>
+<span id="cb34-2"><a href="#cb34-2" aria-hidden="true" tabindex="-1"></a>fitQstTeacher<span class="sc">@</span>Data</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>                                                  Used       Total
+  Number of observations                           657         700</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb36"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb36-1"><a href="#cb36-1" aria-hidden="true" tabindex="-1"></a><span class="fu">fitMeasures</span>(fitQstTeacher,<span class="at">fit.measures=</span>fi)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>rmsea  srmr   cfi  nnfi 
+0.063 0.038 0.999 0.998 </code></pre>
+</div>
+</div>
+<p>The questionnaire also shows good reliability:</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb38"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb38-1"><a href="#cb38-1" aria-hidden="true" tabindex="-1"></a>psych<span class="sc">::</span><span class="fu">alpha</span>(df[,itemsQstTeacher], <span class="at">check.keys =</span> <span class="cn">FALSE</span>)<span class="sc">$</span>total<span class="sc">$</span>raw_alpha</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] 0.8997945</code></pre>
+</div>
+</div>
+</section>
+<section id="time-reproduction" class="level2">
+<h2 class="anchored" data-anchor-id="time-reproduction">Time reproduction</h2>
+<p>For time reproduction, children perceived 12 time sequences and reproduced them. The scores are calculated as the absolute value of the ratio between reproduced and correct time.</p>
+<p>This, however, generate an extremely skewed distribution of the scores (see <a href="#fig-tr-raw" class="quarto-xref">Figure&nbsp;3</a>). Hence, we transformed the items before analysis.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb40"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb40-1"><a href="#cb40-1" aria-hidden="true" tabindex="-1"></a><span class="co"># dd$Var_name[dd$Construct == "Time Reproduction"]</span></span>
+<span id="cb40-2"><a href="#cb40-2" aria-hidden="true" tabindex="-1"></a>items <span class="ot">=</span> dd<span class="sc">$</span>Var_name[dd<span class="sc">$</span>ScaleName<span class="sc">==</span><span class="st">"TR"</span><span class="sc">&amp;</span>dd<span class="sc">$</span>Level<span class="sc">==</span><span class="st">"item"</span>]</span>
+<span id="cb40-3"><a href="#cb40-3" aria-hidden="true" tabindex="-1"></a>items <span class="ot">=</span> items[<span class="sc">!</span><span class="fu">is.na</span>(items) <span class="sc">&amp;</span> <span class="fu">grepl</span>(<span class="st">"PercDevAbs_TR_"</span>,items)]</span>
+<span id="cb40-4"><a href="#cb40-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb40-5"><a href="#cb40-5" aria-hidden="true" tabindex="-1"></a>df_melted <span class="ot">&lt;-</span> <span class="fu">melt</span>(df, </span>
+<span id="cb40-6"><a href="#cb40-6" aria-hidden="true" tabindex="-1"></a>                  <span class="at">id.vars =</span> <span class="fu">c</span>(<span class="st">"Grade"</span>, <span class="st">"Gender"</span>, <span class="st">"Code"</span>, <span class="st">"Age"</span>),</span>
+<span id="cb40-7"><a href="#cb40-7" aria-hidden="true" tabindex="-1"></a>                  <span class="at">measure.vars =</span> items)</span>
+<span id="cb40-8"><a href="#cb40-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb40-9"><a href="#cb40-9" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(df_melted, <span class="fu">aes</span>(<span class="at">x =</span> value)) <span class="sc">+</span></span>
+<span id="cb40-10"><a href="#cb40-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_histogram</span>(<span class="at">binwidth =</span> .<span class="dv">5</span>, <span class="at">fill =</span> <span class="st">"orange"</span>, <span class="at">color =</span> <span class="st">"black"</span>) <span class="sc">+</span></span>
+<span id="cb40-11"><a href="#cb40-11" aria-hidden="true" tabindex="-1"></a>  <span class="fu">facet_wrap</span>(<span class="sc">~</span>variable, <span class="at">ncol =</span> <span class="dv">4</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>Warning: Removed 337 rows containing non-finite outside the scale range
+(`stat_bin()`).</code></pre>
+</div>
+<div class="cell-output-display">
+<div id="fig-tr-raw" class="quarto-float quarto-figure quarto-figure-center anchored" width="672">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-tr-raw-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="report_files/figure-html/fig-tr-raw-1.png" id="fig-tr-raw" class="img-fluid figure-img" width="672">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig quarto-uncaptioned" id="fig-tr-raw-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;3
+</figcaption>
+</figure>
+</div>
+</div>
+</div>
+<p>Specifically, a quantile transformation was used to normalize the data (see <a href="#fig-tr-norm" class="quarto-xref">Figure&nbsp;4</a>).</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb42"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb42-1"><a href="#cb42-1" aria-hidden="true" tabindex="-1"></a>itemsNorm <span class="ot">=</span> <span class="fu">paste0</span>(<span class="st">"TR"</span>,<span class="dv">2</span><span class="sc">:</span><span class="dv">12</span>)</span>
+<span id="cb42-2"><a href="#cb42-2" aria-hidden="true" tabindex="-1"></a>df[,itemsNorm] <span class="ot">=</span> <span class="cn">NA</span></span>
+<span id="cb42-3"><a href="#cb42-3" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span>(i <span class="cf">in</span> <span class="dv">1</span><span class="sc">:</span><span class="fu">length</span>(items)) df[,itemsNorm[i]] <span class="ot">=</span> <span class="fu">normalize</span>(<span class="fu">abs</span>(df[,items[i]]))</span>
+<span id="cb42-4"><a href="#cb42-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb42-5"><a href="#cb42-5" aria-hidden="true" tabindex="-1"></a>df_melted <span class="ot">&lt;-</span> <span class="fu">melt</span>(df, </span>
+<span id="cb42-6"><a href="#cb42-6" aria-hidden="true" tabindex="-1"></a>                  <span class="at">id.vars =</span> <span class="fu">c</span>(<span class="st">"Grade"</span>, <span class="st">"Gender"</span>, <span class="st">"Code"</span>, <span class="st">"Age"</span>),</span>
+<span id="cb42-7"><a href="#cb42-7" aria-hidden="true" tabindex="-1"></a>                  <span class="at">measure.vars =</span> itemsNorm)</span>
+<span id="cb42-8"><a href="#cb42-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb42-9"><a href="#cb42-9" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(df_melted, <span class="fu">aes</span>(<span class="at">x =</span> value)) <span class="sc">+</span></span>
+<span id="cb42-10"><a href="#cb42-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_histogram</span>(<span class="at">binwidth =</span> .<span class="dv">5</span>, <span class="at">fill =</span> <span class="st">"orange"</span>, <span class="at">color =</span> <span class="st">"black"</span>) <span class="sc">+</span></span>
+<span id="cb42-11"><a href="#cb42-11" aria-hidden="true" tabindex="-1"></a>  <span class="fu">facet_wrap</span>(<span class="sc">~</span>variable, <span class="at">ncol =</span> <span class="dv">4</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>Warning: Removed 337 rows containing non-finite outside the scale range
+(`stat_bin()`).</code></pre>
+</div>
+<div class="cell-output-display">
+<div id="fig-tr-norm" class="quarto-float quarto-figure quarto-figure-center anchored" width="672">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-tr-norm-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="report_files/figure-html/fig-tr-norm-1.png" id="fig-tr-norm" class="img-fluid figure-img" width="672">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig quarto-uncaptioned" id="fig-tr-norm-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;4
+</figcaption>
+</figure>
+</div>
+</div>
+</div>
+<p>The CFA model fit using the normalized items shows, as expected, a good fit to the data.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb44"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb44-1"><a href="#cb44-1" aria-hidden="true" tabindex="-1"></a>model <span class="ot">=</span> <span class="fu">paste</span>(<span class="st">"TR_lat =~"</span>,<span class="fu">paste</span>(itemsNorm,<span class="at">collapse=</span><span class="st">"+"</span>))</span>
+<span id="cb44-2"><a href="#cb44-2" aria-hidden="true" tabindex="-1"></a>model</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] "TR_lat =~ TR2+TR3+TR4+TR5+TR6+TR7+TR8+TR9+TR10+TR11+TR12"</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb46"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb46-1"><a href="#cb46-1" aria-hidden="true" tabindex="-1"></a>fit <span class="ot">=</span> <span class="fu">cfa</span>(<span class="at">model=</span>model, <span class="at">data=</span>df)</span>
+<span id="cb46-2"><a href="#cb46-2" aria-hidden="true" tabindex="-1"></a>fit<span class="sc">@</span>Data</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>                                                  Used       Total
+  Number of observations                           629         700</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb48"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb48-1"><a href="#cb48-1" aria-hidden="true" tabindex="-1"></a><span class="fu">fitMeasures</span>(fit,<span class="at">fit.measures=</span>fi)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>rmsea  srmr   cfi  nnfi 
+0.040 0.029 0.979 0.973 </code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb50"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb50-1"><a href="#cb50-1" aria-hidden="true" tabindex="-1"></a><span class="co"># modificationIndices(fit,sort.=T)[1:10,]</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>The items are also reliable:</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb51"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb51-1"><a href="#cb51-1" aria-hidden="true" tabindex="-1"></a>psych<span class="sc">::</span><span class="fu">alpha</span>(df[,itemsNorm])<span class="sc">$</span>total<span class="sc">$</span>raw_alpha</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] 0.8767976</code></pre>
+</div>
+</div>
+<p>And well correlated (both when normalized [above the diagonal] and raw [below], see <a href="#fig-tr-cor" class="quarto-xref">Figure&nbsp;5</a>):</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb53"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb53-1"><a href="#cb53-1" aria-hidden="true" tabindex="-1"></a>corTabTrNorm <span class="ot">&lt;-</span> <span class="fu">cor</span>(df[,itemsNorm],<span class="at">use=</span><span class="st">"pairwise.complete"</span>,<span class="at">method=</span><span class="st">"pearson"</span>)</span>
+<span id="cb53-2"><a href="#cb53-2" aria-hidden="true" tabindex="-1"></a>corTabTrRaw <span class="ot">&lt;-</span> <span class="fu">cor</span>(df[,items],<span class="at">use=</span><span class="st">"pairwise.complete"</span>,<span class="at">method=</span><span class="st">"spearman"</span>)</span>
+<span id="cb53-3"><a href="#cb53-3" aria-hidden="true" tabindex="-1"></a>corTabTr <span class="ot">&lt;-</span> corTabTrRaw  <span class="co"># start with raw (lower triangle)</span></span>
+<span id="cb53-4"><a href="#cb53-4" aria-hidden="true" tabindex="-1"></a>corTabTr[<span class="fu">upper.tri</span>(corTabTr)] <span class="ot">&lt;-</span> corTabTrNorm[<span class="fu">upper.tri</span>(corTabTrNorm)]</span>
+<span id="cb53-5"><a href="#cb53-5" aria-hidden="true" tabindex="-1"></a><span class="fu">corrplot</span>(corTabTr,</span>
+<span id="cb53-6"><a href="#cb53-6" aria-hidden="true" tabindex="-1"></a>         <span class="at">method =</span> <span class="st">"color"</span>,  </span>
+<span id="cb53-7"><a href="#cb53-7" aria-hidden="true" tabindex="-1"></a>         <span class="at">type =</span> <span class="st">"full"</span>,     </span>
+<span id="cb53-8"><a href="#cb53-8" aria-hidden="true" tabindex="-1"></a>         <span class="at">addCoef.col =</span> <span class="st">"black"</span>, </span>
+<span id="cb53-9"><a href="#cb53-9" aria-hidden="true" tabindex="-1"></a>         <span class="at">tl.col =</span> <span class="st">"black"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<div id="fig-tr-cor" class="quarto-float quarto-figure quarto-figure-center anchored" width="672">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-tr-cor-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="report_files/figure-html/fig-tr-cor-1.png" id="fig-tr-cor" class="img-fluid figure-img" width="672">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig quarto-uncaptioned" id="fig-tr-cor-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;5
+</figcaption>
+</figure>
+</div>
+</div>
+</div>
+</section>
+<section id="time-orientation" class="level2">
+<h2 class="anchored" data-anchor-id="time-orientation">Time orientation</h2>
+<p>The time orientation questionnaire is composed of 16 questions about time knowledge, understanding, and use. Items are scored as 1 if correct or 0 if wrong. The first block of items appear easier than the second block (<a href="#fig-time-orientation" class="quarto-xref">Figure&nbsp;6</a>).</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb54"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb54-1"><a href="#cb54-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Time Orientation #### </span></span>
+<span id="cb54-2"><a href="#cb54-2" aria-hidden="true" tabindex="-1"></a>var <span class="ot">=</span> <span class="st">"OTm"</span></span>
+<span id="cb54-3"><a href="#cb54-3" aria-hidden="true" tabindex="-1"></a>items <span class="ot">=</span> dd<span class="sc">$</span>Var_name[dd<span class="sc">$</span>Level<span class="sc">==</span><span class="st">"item"</span><span class="sc">&amp;</span>dd<span class="sc">$</span>ScaleName<span class="sc">==</span>var]</span>
+<span id="cb54-4"><a href="#cb54-4" aria-hidden="true" tabindex="-1"></a>itemsTimeOt <span class="ot">=</span> items[<span class="sc">!</span><span class="fu">is.na</span>(items)]</span>
+<span id="cb54-5"><a href="#cb54-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb54-6"><a href="#cb54-6" aria-hidden="true" tabindex="-1"></a>df_melted <span class="ot">&lt;-</span> <span class="fu">melt</span>(df, </span>
+<span id="cb54-7"><a href="#cb54-7" aria-hidden="true" tabindex="-1"></a>                  <span class="at">id.vars =</span> <span class="fu">c</span>(<span class="st">"Grade"</span>, <span class="st">"Gender"</span>, <span class="st">"Code"</span>, <span class="st">"Age"</span>),</span>
+<span id="cb54-8"><a href="#cb54-8" aria-hidden="true" tabindex="-1"></a>                  <span class="at">measure.vars =</span> itemsTimeOt)</span>
+<span id="cb54-9"><a href="#cb54-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb54-10"><a href="#cb54-10" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(df_melted, <span class="fu">aes</span>(<span class="at">x =</span> value)) <span class="sc">+</span></span>
+<span id="cb54-11"><a href="#cb54-11" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_histogram</span>(<span class="at">binwidth =</span> .<span class="dv">5</span>, <span class="at">fill =</span> <span class="st">"orange"</span>, <span class="at">color =</span> <span class="st">"black"</span>) <span class="sc">+</span></span>
+<span id="cb54-12"><a href="#cb54-12" aria-hidden="true" tabindex="-1"></a>  <span class="fu">facet_wrap</span>(<span class="sc">~</span>variable, <span class="at">ncol =</span> <span class="dv">8</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>Warning: Removed 3036 rows containing non-finite outside the scale range
+(`stat_bin()`).</code></pre>
+</div>
+<div class="cell-output-display">
+<div id="fig-time-orientation" class="quarto-float quarto-figure quarto-figure-center anchored" width="672">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-time-orientation-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="report_files/figure-html/fig-time-orientation-1.png" id="fig-time-orientation" class="img-fluid figure-img" width="672">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig quarto-uncaptioned" id="fig-time-orientation-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;6
+</figcaption>
+</figure>
+</div>
+</div>
+</div>
+<p>As before, we fit again a CFA on this data using DWLS estimation for ordered categories (0/1). The model fits the data quite well, yet there is room for improvement and modification indices highlight residual correlations between items 12 and 14, which are the only two with yes/no response.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb56"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb56-1"><a href="#cb56-1" aria-hidden="true" tabindex="-1"></a>modelTimeOt <span class="ot">=</span> <span class="fu">paste0</span>(<span class="fu">gsub</span>(<span class="st">" "</span>,<span class="st">""</span>,var),<span class="st">"_lat=~"</span>,<span class="fu">paste0</span>(itemsTimeOt,<span class="at">collapse=</span><span class="st">"+"</span>))</span>
+<span id="cb56-2"><a href="#cb56-2" aria-hidden="true" tabindex="-1"></a><span class="fu">print</span>(modelTimeOt)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] "OTm_lat=~OTm_1+OTm_2+OTm_3+OTm_4+OTm_5+OTm_6+OTm_7+OTm_8+OTm_9+OTm_10+OTm_11+OTm_12+OTm_13+OTm_14+OTm_15+OTm_16"</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb58"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb58-1"><a href="#cb58-1" aria-hidden="true" tabindex="-1"></a>fitTimeOt <span class="ot">=</span> <span class="fu">cfa</span>(<span class="at">model=</span>modelTimeOt, <span class="at">data=</span>df, <span class="at">ordered=</span>T)</span>
+<span id="cb58-2"><a href="#cb58-2" aria-hidden="true" tabindex="-1"></a>fitTimeOt<span class="sc">@</span>Data</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>                                                  Used       Total
+  Number of observations                           505         700</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb60"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb60-1"><a href="#cb60-1" aria-hidden="true" tabindex="-1"></a><span class="fu">fitMeasures</span>(fitTimeOt,<span class="at">fit.measures=</span>fi)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>rmsea  srmr   cfi  nnfi 
+0.041 0.096 0.920 0.908 </code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb62"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb62-1"><a href="#cb62-1" aria-hidden="true" tabindex="-1"></a><span class="fu">modificationIndices</span>(fitTimeOt,<span class="at">sort.=</span>T)[<span class="dv">1</span><span class="sc">:</span><span class="dv">10</span>,] <span class="co"># Residui correlati item 12 e 14 - unici con risposta sì-no</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>       lhs op    rhs     mi    epc sepc.lv sepc.all sepc.nox
+194 OTm_12 ~~ OTm_14 41.478 -0.405  -0.405   -0.406   -0.406
+129  OTm_4 ~~  OTm_9 23.697 -0.382  -0.382   -0.537   -0.537
+177  OTm_9 ~~ OTm_12  6.890  0.210   0.210    0.254    0.254
+121  OTm_3 ~~ OTm_13  6.752  0.235   0.235    0.282    0.282
+145  OTm_5 ~~ OTm_14  5.956  0.178   0.178    0.201    0.201
+189 OTm_11 ~~ OTm_13  5.682 -0.175  -0.175   -0.291   -0.291
+191 OTm_11 ~~ OTm_15  5.482  0.207   0.207    0.323    0.323
+199 OTm_13 ~~ OTm_16  5.288 -0.163  -0.163   -0.196   -0.196
+152  OTm_6 ~~ OTm_11  5.113 -0.187  -0.187   -0.381   -0.381
+113  OTm_3 ~~  OTm_5  4.999 -0.191  -0.191   -0.223   -0.223</code></pre>
+</div>
+</div>
+<p>Adding the covariance between items 12 and 14 improves model fit:</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb64"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb64-1"><a href="#cb64-1" aria-hidden="true" tabindex="-1"></a>mi_line <span class="ot">&lt;-</span> <span class="st">"</span></span>
+<span id="cb64-2"><a href="#cb64-2" aria-hidden="true" tabindex="-1"></a><span class="st">OTm_12  ~~  OTm_14</span></span>
+<span id="cb64-3"><a href="#cb64-3" aria-hidden="true" tabindex="-1"></a><span class="st">"</span></span>
+<span id="cb64-4"><a href="#cb64-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb64-5"><a href="#cb64-5" aria-hidden="true" tabindex="-1"></a>modelTimeOtRev <span class="ot">&lt;-</span> <span class="fu">paste</span>(<span class="fu">c</span>(modelTimeOt, mi_line), <span class="at">collapse =</span> <span class="st">"</span><span class="sc">\n</span><span class="st">"</span>)</span>
+<span id="cb64-6"><a href="#cb64-6" aria-hidden="true" tabindex="-1"></a>fitTimeOtRev <span class="ot">=</span> <span class="fu">cfa</span>(<span class="at">model=</span>modelTimeOtRev, <span class="at">data=</span>df, <span class="at">ordered=</span>T)</span>
+<span id="cb64-7"><a href="#cb64-7" aria-hidden="true" tabindex="-1"></a><span class="fu">fitMeasures</span>(fitTimeOtRev,<span class="at">fit.measures=</span>fi)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>rmsea  srmr   cfi  nnfi 
+0.030 0.089 0.957 0.950 </code></pre>
+</div>
+</div>
+<p>The scale has also decent internal consistency for a 0-1 scale:</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb66"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb66-1"><a href="#cb66-1" aria-hidden="true" tabindex="-1"></a>psych<span class="sc">::</span><span class="fu">alpha</span>(df[,itemsTimeOt], <span class="at">check.keys =</span> <span class="cn">TRUE</span>)<span class="sc">$</span>total<span class="sc">$</span>raw_alpha</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] 0.5948585</code></pre>
+</div>
+</div>
+<p>And a good one considering ordinal reliability:</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb68"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb68-1"><a href="#cb68-1" aria-hidden="true" tabindex="-1"></a>semTools<span class="sc">::</span><span class="fu">reliability</span>(fitTimeOtRev)[<span class="dv">2</span>,]</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] 0.7872084</code></pre>
+</div>
+</div>
+</section>
+<section id="time-discrimination-and-estimation" class="level2">
+<h2 class="anchored" data-anchor-id="time-discrimination-and-estimation">Time discrimination and estimation</h2>
+<p>The two tests measuring time discrimination and estimation cannot be modeled using factor analyses as they are either composed by two items (time estimation) or return a single score based on the lowest discrimination ratio calculated with adaptive processes.</p>
+<section id="time-discrimination" class="level3">
+<h3 class="anchored" data-anchor-id="time-discrimination">Time discrimination</h3>
+<p>For time discrimination, the distribution of the scores is again very skewed (see <a href="#fig-td" class="quarto-xref">Figure&nbsp;7</a>), with most children scoring between 1 and 1.5.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb70"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb70-1"><a href="#cb70-1" aria-hidden="true" tabindex="-1"></a><span class="co"># dd$Var_name[dd$Construct == "Time Discrimination"]</span></span>
+<span id="cb70-2"><a href="#cb70-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb70-3"><a href="#cb70-3" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(df, <span class="fu">aes</span>(<span class="at">x =</span> RatioTD)) <span class="sc">+</span></span>
+<span id="cb70-4"><a href="#cb70-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_histogram</span>(<span class="at">binwidth =</span> .<span class="dv">02</span>, </span>
+<span id="cb70-5"><a href="#cb70-5" aria-hidden="true" tabindex="-1"></a>                 <span class="at">fill =</span> <span class="st">"orange"</span>, <span class="at">color =</span> <span class="st">"black"</span>) </span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>Warning: Removed 37 rows containing non-finite outside the scale range
+(`stat_bin()`).</code></pre>
+</div>
+<div class="cell-output-display">
+<div id="fig-td" class="quarto-float quarto-figure quarto-figure-center anchored" width="672">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-td-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="report_files/figure-html/fig-td-1.png" id="fig-td" class="img-fluid figure-img" width="672">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig quarto-uncaptioned" id="fig-td-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;7
+</figcaption>
+</figure>
+</div>
+</div>
+</div>
+</section>
+<section id="time-estimation" class="level3">
+<h3 class="anchored" data-anchor-id="time-estimation">Time estimation</h3>
+<p>For time estimation, the score is given by the absolute difference (in seconds) from the correct answer. The distribution of the scores is again very skewed (see <a href="#fig-te" class="quarto-xref">Figure&nbsp;8</a>).</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb72"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb72-1"><a href="#cb72-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Time Estimation ####</span></span>
+<span id="cb72-2"><a href="#cb72-2" aria-hidden="true" tabindex="-1"></a><span class="co"># dd$Var_name[dd$Construct == "Time Estimation"]</span></span>
+<span id="cb72-3"><a href="#cb72-3" aria-hidden="true" tabindex="-1"></a>teItems <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="st">"TE_Barca_dd"</span>,<span class="st">"TE_Ladro"</span>,<span class="st">"TEdd_Mean"</span>)</span>
+<span id="cb72-4"><a href="#cb72-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb72-5"><a href="#cb72-5" aria-hidden="true" tabindex="-1"></a>df_melted <span class="ot">&lt;-</span> <span class="fu">melt</span>(df, </span>
+<span id="cb72-6"><a href="#cb72-6" aria-hidden="true" tabindex="-1"></a>                  <span class="at">id.vars =</span> <span class="fu">c</span>(<span class="st">"Grade"</span>, <span class="st">"Gender"</span>, <span class="st">"Code"</span>, <span class="st">"Age"</span>),</span>
+<span id="cb72-7"><a href="#cb72-7" aria-hidden="true" tabindex="-1"></a>                  <span class="at">measure.vars =</span> teItems)</span>
+<span id="cb72-8"><a href="#cb72-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb72-9"><a href="#cb72-9" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(df_melted, <span class="fu">aes</span>(<span class="at">x =</span> value)) <span class="sc">+</span></span>
+<span id="cb72-10"><a href="#cb72-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_histogram</span>(<span class="at">binwidth =</span> .<span class="dv">5</span>, <span class="at">fill =</span> <span class="st">"orange"</span>, <span class="at">color =</span> <span class="st">"black"</span>) <span class="sc">+</span></span>
+<span id="cb72-11"><a href="#cb72-11" aria-hidden="true" tabindex="-1"></a>  <span class="fu">facet_wrap</span>(<span class="sc">~</span>variable)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>Warning: Removed 15 rows containing non-finite outside the scale range
+(`stat_bin()`).</code></pre>
+</div>
+<div class="cell-output-display">
+<div id="fig-te" class="quarto-float quarto-figure quarto-figure-center anchored" width="672">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-te-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="report_files/figure-html/fig-te-1.png" id="fig-te" class="img-fluid figure-img" width="672">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig quarto-uncaptioned" id="fig-te-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;8
+</figcaption>
+</figure>
+</div>
+</div>
+</div>
+<p>The correlations between the two items is very high, suggesting that common factors explained children performance in both items.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb74"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb74-1"><a href="#cb74-1" aria-hidden="true" tabindex="-1"></a><span class="fu">cor</span>(df<span class="sc">$</span>TE_Barca_dd,df<span class="sc">$</span>TE_Ladro_dd, <span class="at">use =</span> <span class="st">"complete.obs"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] 0.8745777</code></pre>
+</div>
+</div>
+</section>
+</section>
+</section>
+<section id="convergence-of-the-scales" class="level1">
+<h1>Convergence of the scales</h1>
+<section id="correlations" class="level2">
+<h2 class="anchored" data-anchor-id="correlations">Correlations</h2>
+<p>With the exception of the time estimation score, the time scales are all correlated between each other and with participants’ grade, but not with gender (<a href="#fig-raw-cor" class="quarto-xref">Figure&nbsp;9</a>).</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb76"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb76-1"><a href="#cb76-1" aria-hidden="true" tabindex="-1"></a>dcor <span class="ot">&lt;-</span> <span class="fu">subset</span>(df, <span class="at">select =</span> <span class="fu">c</span>(QSTp_Total_parent, QSTm_Total_teacher,</span>
+<span id="cb76-2"><a href="#cb76-2" aria-hidden="true" tabindex="-1"></a>                              OTm, RatioTD,</span>
+<span id="cb76-3"><a href="#cb76-3" aria-hidden="true" tabindex="-1"></a>                              TEdd_Mean, AverageDevAbs_TR,</span>
+<span id="cb76-4"><a href="#cb76-4" aria-hidden="true" tabindex="-1"></a>                              Grade, Gender))</span>
+<span id="cb76-5"><a href="#cb76-5" aria-hidden="true" tabindex="-1"></a><span class="co"># dcor$AverageDevAbs_TR &lt;- normalize(dcor$AverageDevAbs_TR)</span></span>
+<span id="cb76-6"><a href="#cb76-6" aria-hidden="true" tabindex="-1"></a>corrplot<span class="sc">::</span><span class="fu">corrplot</span>(<span class="fu">cor</span>(dcor, <span class="at">use =</span> <span class="st">"pairwise.complete"</span>), <span class="at">addCoef.col =</span> <span class="st">"black"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<div id="fig-raw-cor" class="quarto-float quarto-figure quarto-figure-center anchored" width="672">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-raw-cor-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="report_files/figure-html/fig-raw-cor-1.png" id="fig-raw-cor" class="img-fluid figure-img" width="672">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig quarto-uncaptioned" id="fig-raw-cor-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;9
+</figcaption>
+</figure>
+</div>
+</div>
+</div>
+<p>However, the scales are generally skewed (<a href="#fig-raw-tot" class="quarto-xref">Figure&nbsp;10</a>). Hence, we normalized them (see <a href="#fig-norm-tot" class="quarto-xref">Figure&nbsp;11</a>) and calculated the correlations again.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb77"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb77-1"><a href="#cb77-1" aria-hidden="true" tabindex="-1"></a>df_melted_raw <span class="ot">&lt;-</span> <span class="fu">melt</span>(dcor, </span>
+<span id="cb77-2"><a href="#cb77-2" aria-hidden="true" tabindex="-1"></a>                  <span class="at">id.vars =</span> <span class="fu">c</span>(<span class="st">"Grade"</span>, <span class="st">"Gender"</span>))</span>
+<span id="cb77-3"><a href="#cb77-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb77-4"><a href="#cb77-4" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(df_melted_raw, <span class="fu">aes</span>(<span class="at">x =</span> value)) <span class="sc">+</span></span>
+<span id="cb77-5"><a href="#cb77-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_histogram</span>(<span class="at">bins =</span> <span class="dv">100</span>, <span class="at">fill =</span> <span class="st">"orange"</span>, <span class="at">color =</span> <span class="st">"black"</span>) <span class="sc">+</span></span>
+<span id="cb77-6"><a href="#cb77-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">facet_wrap</span>(<span class="sc">~</span>variable, <span class="at">scales =</span> <span class="st">"free"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>Warning: Removed 597 rows containing non-finite outside the scale range
+(`stat_bin()`).</code></pre>
+</div>
+<div class="cell-output-display">
+<div id="fig-raw-tot" class="quarto-float quarto-figure quarto-figure-center anchored" width="672">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-raw-tot-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="report_files/figure-html/fig-raw-tot-1.png" id="fig-raw-tot" class="img-fluid figure-img" width="672">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig quarto-uncaptioned" id="fig-raw-tot-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;10
+</figcaption>
+</figure>
+</div>
+</div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb79"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb79-1"><a href="#cb79-1" aria-hidden="true" tabindex="-1"></a>totalNorm <span class="ot">=</span> <span class="fu">paste0</span>(<span class="st">"norm_"</span>,<span class="fu">unique</span>(df_melted_raw<span class="sc">$</span>variable))</span>
+<span id="cb79-2"><a href="#cb79-2" aria-hidden="true" tabindex="-1"></a>totalRaw <span class="ot">=</span> <span class="fu">as.character</span>(<span class="fu">unique</span>(df_melted_raw<span class="sc">$</span>variable))</span>
+<span id="cb79-3"><a href="#cb79-3" aria-hidden="true" tabindex="-1"></a>df[,totalNorm] <span class="ot">=</span> <span class="cn">NA</span></span>
+<span id="cb79-4"><a href="#cb79-4" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span>(i <span class="cf">in</span> <span class="dv">1</span><span class="sc">:</span><span class="fu">length</span>(<span class="fu">unique</span>(df_melted_raw<span class="sc">$</span>variable))) df[,totalNorm[i]] <span class="ot">=</span> <span class="fu">normalize</span>(<span class="fu">abs</span>(df[,totalRaw[i]]))</span>
+<span id="cb79-5"><a href="#cb79-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb79-6"><a href="#cb79-6" aria-hidden="true" tabindex="-1"></a>df_melted_norm <span class="ot">&lt;-</span> <span class="fu">melt</span>(df, </span>
+<span id="cb79-7"><a href="#cb79-7" aria-hidden="true" tabindex="-1"></a>                  <span class="at">id.vars =</span> <span class="fu">c</span>(<span class="st">"Grade"</span>, <span class="st">"Gender"</span>, <span class="st">"Code"</span>, <span class="st">"Age"</span>),</span>
+<span id="cb79-8"><a href="#cb79-8" aria-hidden="true" tabindex="-1"></a>                  <span class="at">measure.vars =</span> totalNorm)</span>
+<span id="cb79-9"><a href="#cb79-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb79-10"><a href="#cb79-10" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(df_melted_norm, <span class="fu">aes</span>(<span class="at">x =</span> value)) <span class="sc">+</span></span>
+<span id="cb79-11"><a href="#cb79-11" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_histogram</span>(<span class="at">binwidth =</span> .<span class="dv">5</span>, <span class="at">fill =</span> <span class="st">"orange"</span>, <span class="at">color =</span> <span class="st">"black"</span>) <span class="sc">+</span></span>
+<span id="cb79-12"><a href="#cb79-12" aria-hidden="true" tabindex="-1"></a>  <span class="fu">facet_wrap</span>(<span class="sc">~</span>variable, <span class="at">ncol =</span> <span class="dv">3</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>Warning: Removed 597 rows containing non-finite outside the scale range
+(`stat_bin()`).</code></pre>
+</div>
+<div class="cell-output-display">
+<div id="fig-norm-tot" class="quarto-float quarto-figure quarto-figure-center anchored" width="672">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-norm-tot-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="report_files/figure-html/fig-norm-tot-1.png" id="fig-norm-tot" class="img-fluid figure-img" width="672">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig quarto-uncaptioned" id="fig-norm-tot-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;11
+</figcaption>
+</figure>
+</div>
+</div>
+</div>
+<p>The correlations were almost identical, however, the time estimation score is nor well correlated with the other factors (<a href="#fig-norm-cor" class="quarto-xref">Figure&nbsp;12</a>).</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb81"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb81-1"><a href="#cb81-1" aria-hidden="true" tabindex="-1"></a>dcor2 <span class="ot">&lt;-</span> df[,<span class="fu">c</span>(totalNorm,<span class="st">"Grade"</span>,<span class="st">"Gender"</span>)]</span>
+<span id="cb81-2"><a href="#cb81-2" aria-hidden="true" tabindex="-1"></a>corrplot<span class="sc">::</span><span class="fu">corrplot</span>(<span class="fu">cor</span>(dcor2, <span class="at">use =</span> <span class="st">"pairwise.complete"</span>), <span class="at">addCoef.col =</span> <span class="st">"black"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<div id="fig-norm-cor" class="quarto-float quarto-figure quarto-figure-center anchored" width="672">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-norm-cor-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="report_files/figure-html/fig-norm-cor-1.png" id="fig-norm-cor" class="img-fluid figure-img" width="672">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig quarto-uncaptioned" id="fig-norm-cor-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;12
+</figcaption>
+</figure>
+</div>
+</div>
+</div>
+</section>
+<section id="factor-structure" class="level2">
+<h2 class="anchored" data-anchor-id="factor-structure">Factor structure</h2>
+<p>We may view the different factors measured as indicator of a general factor of time. This might be modeled as a CFA.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb82"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb82-1"><a href="#cb82-1" aria-hidden="true" tabindex="-1"></a>g_model <span class="ot">=</span> <span class="fu">paste</span>(<span class="st">"g =~"</span>,<span class="fu">paste</span>(totalNorm,<span class="at">collapse=</span><span class="st">"+"</span>))</span>
+<span id="cb82-2"><a href="#cb82-2" aria-hidden="true" tabindex="-1"></a>g_model</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] "g =~ norm_QSTp_Total_parent+norm_QSTm_Total_teacher+norm_OTm+norm_RatioTD+norm_TEdd_Mean+norm_AverageDevAbs_TR"</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb84"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb84-1"><a href="#cb84-1" aria-hidden="true" tabindex="-1"></a>fit <span class="ot">=</span> <span class="fu">cfa</span>(<span class="at">model=</span>g_model, <span class="at">data=</span>df, <span class="at">missing =</span> <span class="st">"fiml"</span>,<span class="at">std.lv=</span>T)</span>
+<span id="cb84-2"><a href="#cb84-2" aria-hidden="true" tabindex="-1"></a>fit<span class="sc">@</span>Data</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>  Number of observations                           700
+  Number of missing patterns                        25</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb86"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb86-1"><a href="#cb86-1" aria-hidden="true" tabindex="-1"></a><span class="fu">fitMeasures</span>(fit,<span class="at">fit.measures=</span>fi)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>rmsea  srmr   cfi  nnfi 
+0.062 0.036 0.934 0.890 </code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb88"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb88-1"><a href="#cb88-1" aria-hidden="true" tabindex="-1"></a><span class="fu">modificationIndices</span>(fit,<span class="at">sort.=</span>T)[<span class="dv">1</span><span class="sc">:</span><span class="dv">10</span>,]</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>                       lhs op                     rhs     mi    epc sepc.lv
+34            norm_RatioTD ~~   norm_AverageDevAbs_TR 19.167  0.163   0.163
+30                norm_OTm ~~            norm_RatioTD 13.517  0.165   0.165
+26 norm_QSTm_Total_teacher ~~                norm_OTm  7.518  0.133   0.133
+31                norm_OTm ~~          norm_TEdd_Mean  4.198 -0.089  -0.089
+21  norm_QSTp_Total_parent ~~ norm_QSTm_Total_teacher  3.346  0.081   0.081
+28 norm_QSTm_Total_teacher ~~          norm_TEdd_Mean  3.092  0.064   0.064
+29 norm_QSTm_Total_teacher ~~   norm_AverageDevAbs_TR  2.265  0.058   0.058
+27 norm_QSTm_Total_teacher ~~            norm_RatioTD  1.805  0.050   0.050
+24  norm_QSTp_Total_parent ~~          norm_TEdd_Mean  1.745  0.058   0.058
+33            norm_RatioTD ~~          norm_TEdd_Mean  1.472  0.044   0.044
+   sepc.all sepc.nox
+34    0.214    0.214
+30    0.260    0.260
+26    0.230    0.230
+31   -0.140   -0.140
+21    0.113    0.113
+28    0.089    0.089
+29    0.084    0.084
+27    0.070    0.070
+24    0.074    0.074
+33    0.056    0.056</code></pre>
+</div>
+</div>
+<p>The model shows acceptable, yet quite low, fit indices. MI suggest that time discrimination and time reproduction scores may be more similar between each other than with other factors. This makes sense as the two have quite similar requests. With this specification, the model shows excellent fit to the data.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb90"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb90-1"><a href="#cb90-1" aria-hidden="true" tabindex="-1"></a>mi_line <span class="ot">&lt;-</span> <span class="st">"</span></span>
+<span id="cb90-2"><a href="#cb90-2" aria-hidden="true" tabindex="-1"></a><span class="st">norm_RatioTD    ~~  norm_AverageDevAbs_TR</span></span>
+<span id="cb90-3"><a href="#cb90-3" aria-hidden="true" tabindex="-1"></a><span class="st">"</span></span>
+<span id="cb90-4"><a href="#cb90-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb90-5"><a href="#cb90-5" aria-hidden="true" tabindex="-1"></a>g_model <span class="ot">&lt;-</span> <span class="fu">paste</span>(<span class="fu">c</span>(g_model, mi_line), <span class="at">collapse =</span> <span class="st">"</span><span class="sc">\n</span><span class="st">"</span>)</span>
+<span id="cb90-6"><a href="#cb90-6" aria-hidden="true" tabindex="-1"></a>fit <span class="ot">=</span> <span class="fu">cfa</span>(<span class="at">model=</span>g_model, <span class="at">data=</span>df, <span class="at">missing =</span> <span class="st">"fiml"</span>,<span class="at">std.lv=</span>T)</span>
+<span id="cb90-7"><a href="#cb90-7" aria-hidden="true" tabindex="-1"></a><span class="fu">fitMeasures</span>(fit,<span class="at">fit.measures=</span>fi)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>rmsea  srmr   cfi  nnfi 
+0.033 0.025 0.983 0.968 </code></pre>
+</div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb92"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb92-1"><a href="#cb92-1" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(fit,<span class="at">std=</span>T)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>lavaan 0.6-19 ended normally after 19 iterations
+
+  Estimator                                         ML
+  Optimization method                           NLMINB
+  Number of model parameters                        19
+
+  Number of observations                           700
+  Number of missing patterns                        25
+
+Model Test User Model:
+                                                      
+  Test statistic                                14.279
+  Degrees of freedom                                 8
+  P-value (Chi-square)                           0.075
+
+Parameter Estimates:
+
+  Standard errors                             Standard
+  Information                                 Observed
+  Observed information based on                Hessian
+
+Latent Variables:
+                   Estimate  Std.Err  z-value  P(&gt;|z|)   Std.lv  Std.all
+  g =~                                                                  
+    nrm_QSTp_Ttl_p    0.399    0.056    7.158    0.000    0.399    0.413
+    nrm_QSTm_Ttl_t    0.539    0.045   11.864    0.000    0.539    0.560
+    norm_OTm          0.732    0.058   12.526    0.000    0.732    0.738
+    norm_RatioTD     -0.357    0.049   -7.304    0.000   -0.357   -0.361
+    norm_TEdd_Mean   -0.413    0.045   -9.078    0.000   -0.413   -0.421
+    nrm_AvrgDvA_TR   -0.445    0.047   -9.542    0.000   -0.445   -0.449
+
+Covariances:
+                   Estimate  Std.Err  z-value  P(&gt;|z|)   Std.lv  Std.all
+ .norm_RatioTD ~~                                                       
+   .nrm_AvrgDvA_TR    0.161    0.038    4.215    0.000    0.161    0.197
+
+Intercepts:
+                   Estimate  Std.Err  z-value  P(&gt;|z|)   Std.lv  Std.all
+   .nrm_QSTp_Ttl_p   -0.034    0.047   -0.738    0.461   -0.034   -0.036
+   .nrm_QSTm_Ttl_t   -0.015    0.037   -0.392    0.695   -0.015   -0.015
+   .norm_OTm         -0.110    0.043   -2.543    0.011   -0.110   -0.111
+   .norm_RatioTD     -0.004    0.038   -0.106    0.916   -0.004   -0.004
+   .norm_TEdd_Mean    0.005    0.037    0.130    0.897    0.005    0.005
+   .nrm_AvrgDvA_TR   -0.003    0.038   -0.082    0.935   -0.003   -0.003
+
+Variances:
+                   Estimate  Std.Err  z-value  P(&gt;|z|)   Std.lv  Std.all
+   .nrm_QSTp_Ttl_p    0.770    0.060   12.767    0.000    0.770    0.829
+   .nrm_QSTm_Ttl_t    0.636    0.048   13.316    0.000    0.636    0.686
+   .norm_OTm          0.448    0.065    6.931    0.000    0.448    0.455
+   .norm_RatioTD      0.850    0.052   16.309    0.000    0.850    0.870
+   .norm_TEdd_Mean    0.793    0.049   16.331    0.000    0.793    0.823
+   .nrm_AvrgDvA_TR    0.784    0.050   15.579    0.000    0.784    0.798
+    g                 1.000                               1.000    1.000</code></pre>
+</div>
+</div>
+</section>
+</section>
+<section id="time-trends" class="level1">
+<h1>Time trends</h1>
+<p>Across primary schools, we expect the time scores to increase, possibly linearly, but probably not. <a href="#fig-trend-raw" class="quarto-xref">Figure&nbsp;13</a> shows the age trend of the six scales:</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb94"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb94-1"><a href="#cb94-1" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(df_melted_raw, <span class="fu">aes</span>(<span class="at">y =</span> value, <span class="at">x =</span> Grade)) <span class="sc">+</span></span>
+<span id="cb94-2"><a href="#cb94-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_smooth</span>() <span class="sc">+</span> </span>
+<span id="cb94-3"><a href="#cb94-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">facet_wrap</span>(<span class="sc">~</span>variable, <span class="at">ncol =</span> <span class="dv">3</span>, <span class="at">scales =</span> <span class="st">"free"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<div id="fig-trend-raw" class="quarto-float quarto-figure quarto-figure-center anchored" width="672">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-trend-raw-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="report_files/figure-html/fig-trend-raw-1.png" id="fig-trend-raw" class="img-fluid figure-img" width="672">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig quarto-uncaptioned" id="fig-trend-raw-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;13
+</figcaption>
+</figure>
+</div>
+</div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb95"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb95-1"><a href="#cb95-1" aria-hidden="true" tabindex="-1"></a><span class="co"># ggplot(df_melted_norm, aes(y = value, x = Grade)) +</span></span>
+<span id="cb95-2"><a href="#cb95-2" aria-hidden="true" tabindex="-1"></a><span class="co">#   geom_smooth() + </span></span>
+<span id="cb95-3"><a href="#cb95-3" aria-hidden="true" tabindex="-1"></a><span class="co">#   facet_wrap(~variable, ncol = 3, scales = "free")</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</section>
+
+</main>
+<!-- /main column -->
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "Copied!");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "Copied!");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+        const codeEl = trigger.previousElementSibling.cloneNode(true);
+        for (const childEl of codeEl.children) {
+          if (isCodeAnnotation(childEl)) {
+            childEl.remove();
+          }
+        }
+        return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp('/' + window.location.host + '/');
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+</div> <!-- /content -->
+
+
+
+
+</body></html>
