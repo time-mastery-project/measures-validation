@@ -70,7 +70,7 @@ table(df$Grade)
 
 ## Time sense parents
 
-Parents responded to 10 items regarding their children sense of time. The items were on a 4-point Likert scale and, as clear from @fig-qst-parents, the response distribution was extremely skewed with parents almost never reporting extremely high negative values.
+Parents responded to 10 items regarding their children sense of time. The items were on a 4-point Likert scale (0-3) and, as clear from @fig-qst-parents, the response distribution was extremely skewed with parents almost never reporting extremely high negative values.
 
 ```{r}
 #| label: fig-qst-parents
@@ -271,9 +271,9 @@ corrplot(corTabTr,
          tl.col = "black")
 ```
 
-## Time orientation
+## Time knowledge and orientation
 
-The time orientation questionnaire is composed of 16 questions about time knowledge, understanding, and use. Items are scored as 1 if correct or 0 if wrong. The first block of items appear easier than the second block (@fig-time-orientation).
+The time orientation questionnaire is composed of 16 questions about time knowledge and orientation. The first 10 items measure time knowledge, while the last 6 measure time orientation. Items are scored as 1 if correct or 0 if wrong (@fig-time-orientation).
 
 ```{r}
 #| label: fig-time-orientation
@@ -293,10 +293,8 @@ ggplot(df_melted, aes(x = value)) +
 
 ```
 
-As before, we fit again a CFA on this data using DWLS estimation for ordered categories (0/1). The model fits the data quite well, yet there is room for improvement and modification indices highlight residual correlations between items 12 and 14, which are the only two with yes/no response.
-
 ```{r}
-#| label: model-time-orientation
+#| label: model-time-orientation-tot
 modelTimeOt = paste0(gsub(" ","",var),"_lat=~",paste0(itemsTimeOt,collapse="+"))
 print(modelTimeOt)
 fitTimeOt = cfa(model=modelTimeOt, data=df, ordered=T)
@@ -308,7 +306,7 @@ modificationIndices(fitTimeOt,sort.=T)[1:10,] # Residui correlati item 12 e 14 -
 Adding the covariance between items 12 and 14 improves model fit:
 
 ```{r}
-#| label: model-time-orientation-mi
+#| label: model-time-orientation-tot-mi
 mi_line <- "
 OTm_12	~~	OTm_14
 "
@@ -321,7 +319,7 @@ fitMeasures(fitTimeOtRev,fit.measures=fi)
 The scale has also decent internal consistency for a 0-1 scale:
 
 ```{r}
-#| label: time-orientation-rel
+#| label: time-orientation-tot-rel
 #| warning: false
 psych::alpha(df[,itemsTimeOt], check.keys = TRUE)$total$raw_alpha
 ```
@@ -332,6 +330,41 @@ And a good one considering ordinal reliability:
 #| warning: false
 #| message: false
 semTools::reliability(fitTimeOtRev)[2,]
+```
+
+
+## Time knowledge
+
+As before, we fit again a CFA on this data using DWLS estimation for ordered categories (0/1). The model fits the data very well.
+
+```{r}
+#| label: model-time-know
+items_k = itemsTimeOt[1:10]
+
+modelTimeKnow = paste0(gsub(" ","",var),"_lat=~",paste0(items_k,collapse="+"))
+print(modelTimeKnow)
+fitTimeKnow = cfa(model=modelTimeKnow, data=df, ordered=T)
+fitTimeKnow@Data
+fitMeasures(fitTimeKnow,fit.measures=fi)
+```
+
+## Time orientation
+
+The time orientation scale has perfect fit to the data (covariance between item 12 and 14 is included).
+
+```{r}
+#| label: model-time-orientation
+items_o = itemsTimeOt[11:16]
+modelTimeOt = paste0(gsub(" ","",var),"_lat=~",paste0(items_o,collapse="+"))
+mi_line <- "
+OTm_12	~~	OTm_14
+"
+
+modelTimeOtRev <- paste(c(modelTimeOt, mi_line), collapse = "\n")
+print(modelTimeOtRev)
+fitTimeOtRev = cfa(model=modelTimeOtRev, data=df, ordered=T)
+fitTimeOtRev@Data
+fitMeasures(fitTimeOtRev,fit.measures=fi)
 ```
 
 ## Time discrimination and estimation
@@ -421,7 +454,7 @@ ggplot(df_melted_norm, aes(x = value)) +
   facet_wrap(~variable, ncol = 3)
 ```
 
-The correlations were almost identical, however, the time estimation score is nor well correlated with the other factors (@fig-norm-cor).
+The correlations are almost identical, however, the time estimation score is now well correlated with the other factors (@fig-norm-cor).
 
 ```{r}
 #| label: fig-norm-cor
@@ -472,13 +505,4 @@ Across primary schools, we expect the time scores to increase, possibly linearly
 ggplot(df_melted_raw, aes(y = value, x = Grade)) +
   geom_smooth() + 
   facet_wrap(~variable, ncol = 3, scales = "free")
-```
-
-
-
-
-```{r}
-# ggplot(df_melted_norm, aes(y = value, x = Grade)) +
-#   geom_smooth() + 
-#   facet_wrap(~variable, ncol = 3, scales = "free")
 ```

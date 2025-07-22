@@ -249,3 +249,121 @@ cnorm.cv(parQstNorm, repetitions=3)
 # 3.5 the middle of the third school year)
 
 normTable(c(3, 3.25, 3.5), parQstNorm)
+
+
+# GAMSS ####
+library(gamlss)
+library(ggplot2)
+
+df1 <- df[is.na(df$QSTp_Total_parent)==FALSE,c("Grade","QSTp_Total_parent","Age")]
+df1$QSTp_scaled <- df1$QSTp_Total_parent / 30
+
+model <- gamlss(
+  QSTp_scaled ~ pb(Age),             # Smooth function for mean
+  sigma.fo = ~ pb(Age),               # Smooth function for SD
+  data = df1,
+  family = BEINF                            # Box-Cox Power Exponential, flexible for skewed data
+)
+
+# New grade values to predict over
+newdata <- data.frame(Age = seq(min(df$Age), max(df$Age), by = 0.1))
+
+# Predict model parameters
+predData <- predictAll(model, newdata, type = "response")
+
+predData <- cbind.data.frame(newdata,predData)
+
+ggplot(predData, aes(x = Age, y = mu)) +
+  geom_point()
+
+## https://rdrr.io/cran/gamlss/man/centiles.pred.html
+centiles(model,xvar = df1$Age)
+
+centiles.pred(model,
+              xname = "Age",
+              xvalues = seq(min(df1$Age), max(df1$Age), by = 0.1),
+              cent = c(2, 10, 25, 50, 75, 90, 98))
+
+
+newx<-seq(5,12,1)
+mat <- centiles.pred(model, xname="Age", xvalues=newx )
+mat
+
+## now plot the centile curves  
+mat <- centiles.pred(model, xname="Age",xvalues=newx, plot=TRUE )
+
+
+## bring the data and fit the model
+data(abdom)
+a<-gamlss(y~pb(x),sigma.fo=~pb(x), data=abdom, family=BCT)
+## plot the centiles
+centiles(a,xvar=abdom$x)
+##-----------------------------------------------------------------------------
+## the first use of the function centiles.pred()
+## to calculate the centiles at new x values
+##-----------------------------------------------------------------------------
+newx<-seq(12,40,2)
+mat <- centiles.pred(a, xname="x", xvalues=newx )
+mat
+## now plot the centile curves  
+mat <- centiles.pred(a, xname="x",xvalues=newx, plot=TRUE )
+##-----------------------------------------------------------------------------
+## the second use of the function centiles.pred()
+## to calculate (nornalised) standard-centiles for new x
+## values using the fitted model
+##-----------------------------------------------------------------------------
+newx <- seq(12,40,2)
+mat <- centiles.pred(model, xname="x",xvalues=newx, type="standard-centiles" )
+mat
+## now plot the standard centiles  
+mat <- centiles.pred(a, xname="x",xvalues=newx, type="standard-centiles",
+                     plot = TRUE )
+##-----------------------------------------------------------------------------
+## the third use of the function centiles.pred()
+##  if we have new x and y values what are their z-scores?
+##-----------------------------------------------------------------------------
+# create new y and x values and plot them in the previous plot
+newx <- c(20,21.2,23,20.9,24.2,24.1,25)
+newy <- c(130,121,123,125,140,145,150)
+for(i in 1:7) points(newx[i],newy[i],col="blue")
+## now calculate their z-scores
+znewx <- centiles.pred(a, xname="x",xvalues=newx,yval=newy, type="z-scores" )
+znewx
+## Not run: 
+##-----------------------------------------------------------------------------
+## What we do if the x variables is transformed?
+##----------------------------------------------------------------------------
+##  case 1 : transformed x-variable within the formula
+##----------------------------------------------------------------------------
+## fit model
+aa <- gamlss(y~pb(x^0.5),sigma.fo=~pb(x^0.5), data=abdom, family=BCT)
+## centiles is working in this case
+centiles(aa, xvar=abdom$x, legend = FALSE)
+## get predict for values of x at 12, 14, ..., 40
+mat <- centiles.pred(aa, xname="x", xvalues=seq(12,40,2), plot=TRUE )
+mat
+# plot all prediction points
+xx <- rep(mat[,1],9)
+yy <- unlist(mat[,2:10])
+points(xx,yy,col="red")
+##----------------------------------------------------------------------------
+##  case 2 : the x-variable is previously transformed 
+##----------------------------------------------------------------------------
+nx <- abdom$x^0.5
+aa <- gamlss(y~pb(nx),sigma.fo=~pb(nx), data=abdom, family=BCT)
+centiles(aa, xvar=abdom$x)
+# equivalent to fitting
+newd<-data.frame( abdom, nx=abdom$x^0.5)
+aa1 <- gamlss(y~pb(nx),sigma.fo=~pb(nx), family=BCT, data=newd)
+centiles(aa1, xvar=abdom$x)
+# getting the centiles at x equal to 12, 14, ...40
+mat <-  centiles.pred(aa, xname="nx", xvalues=seq(12,40,2), power=0.5, 
+                      data=newd, plot=TRUE)
+# plot all prediction points         
+xxx <- rep(mat[,1],9)
+yyy <- unlist(mat[,2:10])
+points(xxx,yyy,col="red")
+# the idea is that if the transformed x-variable is used in the fit
+# the power argument has to used in centiles.pred()
+
+## End(Not run)
