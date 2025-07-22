@@ -421,7 +421,7 @@ With the exception of the time estimation score, the time scales are all correla
 dcor <- subset(df, select = c(QSTp_Total_parent, QSTm_Total_teacher,
                               OTm, RatioTD,
                               TEdd_Mean, AverageDevAbs_TR,
-                              Grade, Gender))
+                              Grade, Gender,Age))
 # dcor$AverageDevAbs_TR <- normalize(dcor$AverageDevAbs_TR)
 corrplot::corrplot(cor(dcor, use = "pairwise.complete"), addCoef.col = "black")
 ```
@@ -431,7 +431,7 @@ However, the scales are generally skewed (@fig-raw-tot). Hence, we normalized th
 ```{r}
 #| label: fig-raw-tot
 df_melted_raw <- melt(dcor, 
-                  id.vars = c("Grade", "Gender"))
+                  id.vars = c("Grade", "Gender","Age"))
 
 ggplot(df_melted_raw, aes(x = value)) +
   geom_histogram(bins = 100, fill = "orange", color = "black") +
@@ -497,7 +497,7 @@ summary(fit,std=T)
 
 # Time trends
 
-Across primary schools, we expect the time scores to increase, possibly linearly, but probably not. @fig-trend-raw shows the age trend of the six scales:
+Across primary schools, we expect the time scores to increase, possibly linearly, but probably not. @fig-trend-raw shows the grade trend of the six scales, while @fig-age-trend-raw shows the continuous age trend:
 
 ```{r}
 #| label: fig-trend-raw
@@ -506,3 +506,12 @@ ggplot(df_melted_raw, aes(y = value, x = Grade)) +
   geom_smooth() + 
   facet_wrap(~variable, ncol = 3, scales = "free")
 ```
+
+```{r}
+#| label: fig-age-trend-raw
+#| warning: false
+ggplot(df_melted_raw, aes(y = value, x = Age)) +
+  geom_smooth() + 
+  facet_wrap(~variable, ncol = 3, scales = "free")
+```
+
