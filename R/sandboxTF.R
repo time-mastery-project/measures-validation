@@ -180,80 +180,75 @@ dcor$AverageDevAbs_TR <- normalize(dcor$AverageDevAbs_TR)
 (corTab<-round(cor(dcor, use = "pairwise.complete"),2))
 corrplot::corrplot(corTab, addCoef.col = "black")
 
-
-# CNORM ####
-library(cNORM)
-
-dcor <- subset(df, select = c(QSTp_Total_parent, QSTm_Total_teacher,
-                              OTm, RatioTD,
-                              TEdd_Mean, AverageDevAbs_TR,
-                              Grade, Gender))
-
-# Using the syntax on the console: The function 'cnorm' performs
-# all steps automatically. Please specify the raw score and the
-# grouping variable. The resulting object contains the ranked data
-# via object$data and the model via object$model.
-
-parQstNorm <- cnorm(raw = dcor$QSTp_Total_parent, group = dcor$Grade)
-
-# Plot different indicators of model fit depending on the number of
-# predictors
-
-plot(parQstNorm, "subset", type=6) # plot R2
-plot(parQstNorm, "subset", type=3) # plot MSE
-
-# NOTE! At this point, you usually select a good fitting model and rerun
-# the process with a fixed number of terms, e. g. 4. Avoid models
-# with a high number of terms:
-
-parQstNorm <- cnorm(raw = dcor$QSTp_Total_parent, group = dcor$Grade,
-                    terms = 4)
-
-# Powers of age can be specified via the parameter 't'.
-# Cubic modeling is usually sufficient, i.e., t = 3.
-# In contrast, 'k' specifies the power of the person location.
-# This parameter should be somewhat higher, e.g., k = 5.
-
-parQstNorm <- cnorm(raw = dcor$QSTp_Total_parent, group = dcor$Grade,
-                    k = 5, t = 2)
-
-# Visual inspection of the percentile curves of the fitted model
-
-plot(parQstNorm, "percentiles")
-
-# Visual inspection of the observed and fitted raw and norm scores
-
-plot(parQstNorm, "norm")
-plot(parQstNorm, "raw")
-
-# In order to compare different models, generate a series of percentile
-# plots with an ascending number of predictors, in this example between
-# 5 and 14 predictors.
-
-plot(parQstNorm, "series", start=5, end=14)
-
-# Cross validation in order to choose appropriate number of terms
-# with 80% of the data for training and 20% for validation. Due to
-# the time consumption, the maximum number of terms is limited to 10
-# in this example with 3 repetitions of the cross validation.
-
-cnorm.cv(parQstNorm$data, max=10, repetitions=3)
-
-# Cross validation with prespecified terms of an already
-# existing model
-
-cnorm.cv(parQstNorm, repetitions=3)
-
-# Print norm table (in this case: 0, 3 or 6 months at grade level 3)
-# (Note: The data is coded such that 3.0 represents the beginning and
-# 3.5 the middle of the third school year)
-
-normTable(c(3, 3.25, 3.5), parQstNorm)
-
-
 # GAMSS ####
 library(gamlss)
 library(ggplot2)
+
+# install.packages(c("gamlss", "gamlss.dist", "gamlss.add"))  # if needed
+library(gamlss)
+library(gamlss.dist)  # LOGNO, qLOGNO, etc.
+library(gamlss.add)   # smoothers like pb()
+
+# --- EXAMPLE DATA (remove this block and plug in your own 'dat') ---
+set.seed(1)
+n   <- 600
+dat <- data.frame(
+  age = runif(n, 0, 18)
+)
+# generate a log-normal outcome with age-varying mean & sd on log-scale
+mu_true    <- 1 + 0.12*sin(dat$age/3)          # mean of log(Y)
+sigma_true <- 0.3 + 0.01*(dat$age - 9)         # sd of log(Y)
+y          <- rLOGNO(n, mu = mu_true, sigma = pmax(0.15, sigma_true))
+dat$y <- y
+# -------------------------------------------------------------------
+
+# 1) FIT: log-normal GAMLSS with smooths in mu and sigma
+# - mu link is identity on log-scale mean
+# - sigma link is log by default (keeps sigma > 0)
+fit <- gamlss(
+  y ~ pb(age),               # smooth effect for mu
+  sigma.fo = ~ pb(age),      # allow spread to change with age
+  family   = LOGNO,          # log-normal
+  data     = dat,
+  trace    = FALSE
+)
+
+# 2) PERCENTILE CURVES over an age grid (e.g., 3rd..97th)
+ages_grid <- seq(min(dat$age), max(dat$age), by = 0.25)
+centiles_out <- centiles.pred(
+  fit,
+  xname  = "age",
+  xvalues = ages_grid,
+  cent   = c(3, 10, 25, 50, 75, 90, 97),
+  plot   = TRUE,             # set to FALSE if you only want the values
+  show   = TRUE,
+  ylab   = "Outcome (y)",
+  xlab   = "Age"
+)
+
+# centiles_out is a data.frame with columns: x, C3, C10, ..., C97
+head(centiles_out)
+
+# 3) EXACT PERCENTILES at specific ages you care about
+ages_of_interest <- c(2, 5, 10, 15)
+newdat <- data.frame(age = ages_of_interest)
+
+# Get fitted distribution parameters at those ages
+pa <- predictAll(fit, newdata = newdat)  # returns mu, sigma (for LOGNO)
+
+# Choose percentiles you want
+p <- c(.03, .10, .25, .50, .75, .90, .97)
+
+# Build a tidy table of percentile values by age
+perc_mat <- sapply(seq_len(nrow(newdat)), function(i) {
+  qLOGNO(p, mu = pa$mu[i], sigma = pa$sigma[i])
+})
+dimnames(perc_mat) <- list(paste0(p*100, "%"), paste0("age=", newdat$age))
+percentiles_by_age <- t(perc_mat)
+percentiles_by_age
+
+
+
 
 df1 <- df[is.na(df$QSTp_Total_parent)==FALSE,c("Grade","QSTp_Total_parent","Age")]
 df1$QSTp_scaled <- df1$QSTp_Total_parent / 30

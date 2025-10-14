@@ -332,7 +332,6 @@ And a good one considering ordinal reliability:
 semTools::reliability(fitTimeOtRev)[2,]
 ```
 
-
 ## Time knowledge
 
 As before, we fit again a CFA on this data using DWLS estimation for ordered categories (0/1). The model fits the data very well.
@@ -514,4 +513,3 @@ ggplot(df_melted_raw, aes(y = value, x = Age)) +
   geom_smooth() + 
   facet_wrap(~variable, ncol = 3, scales = "free")
 ```
-
