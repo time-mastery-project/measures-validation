@@ -1,0 +1,247 @@
+---
+title: "Conversion Tables"
+format: html
+embed-resources: true
+execute:
+  echo: false
+---
+
+```{r}
+#| label: openTabs
+
+tabList <- readRDS("../scoring/normPercTabs.RDS")
+
+p_vals <- as.numeric(rownames(tabList[[1]]))
+
+# Convert to z-scores
+z_scores <- qnorm(p_vals)
+
+```
+
+
+\newpage
+# Parent Questionnaire
+
+```{r}
+tabParents <- tabList[["QSTp"]]
+
+rownames(tabParents) <- paste0(
+  "p = ", rownames(tabParents),
+  "; z = ", round(z_scores,3)
+)
+
+tabParents
+```
+
+\newpage
+# Teacher Questionnaire
+
+```{r}
+tabTeacher <- tabList[["QSTt"]]
+
+rownames(tabTeacher) <- paste0(
+  "p = ", rownames(tabTeacher),
+  "; z = ", round(z_scores,3)
+)
+
+tabTeacher
+```
+
+\newpage
+# Students Questionnaire
+
+```{r}
+tabStudents <- tabList[["OTm"]]
+
+rownames(tabStudents) <- paste0(
+  "p = ", rownames(tabStudents),
+  "; z = ", round(z_scores,3)
+)
+
+tabStudents
+```
+
+\newpage
+# Time Discrimination
+
+```{r}
+tabTD <- tabList[["TD"]]
+
+rownames(tabTD) <- paste0(
+  "p = ", rownames(tabTD),
+  "; z = ", round(z_scores,3)
+)
+
+tabTD
+```
+
+\newpage
+# Time Estimation
+
+## Boat
+
+```{r}
+tabTEB <- tabList[["teB"]]
+
+rownames(tabTEB) <- paste0(
+  "p = ", rownames(tabTEB),
+  "; z = ", round(z_scores,3)
+)
+
+tabTEB
+```
+
+## Thief
+
+```{r}
+tabTEL <- tabList[["teL"]]
+
+rownames(tabTEL) <- paste0(
+  "p = ", rownames(tabTEL),
+  "; z = ", round(z_scores,3)
+)
+
+tabTEL
+```
+
+\newpage
+# Time Reproduction
+
+```{r}
+tabTR <- tabList[["TR"]]
+
+```
+
+
+## Item 2
+```{r}
+tabTRi <- tabTR[[1]]
+
+rownames(tabTRi) <- paste0(
+  "p = ", rownames(tabTRi),
+  "; z = ", round(z_scores,3)
+)
+
+tabTRi
+```
+
+## Item 3
+```{r}
+tabTRi <- tabTR[[2]]
+
+rownames(tabTRi) <- paste0(
+  "p = ", rownames(tabTRi),
+  "; z = ", round(z_scores,3)
+)
+
+tabTRi
+```
+
+## Item 4
+```{r}
+tabTRi <- tabTR[[3]]
+
+rownames(tabTRi) <- paste0(
+  "p = ", rownames(tabTRi),
+  "; z = ", round(z_scores,3)
+)
+
+tabTRi
+```
+
+## Item 5
+```{r}
+tabTRi <- tabTR[[4]]
+
+rownames(tabTRi) <- paste0(
+  "p = ", rownames(tabTRi),
+  "; z = ", round(z_scores,3)
+)
+
+tabTRi
+```
+
+## Item 6
+```{r}
+tabTRi <- tabTR[[5]]
+
+rownames(tabTRi) <- paste0(
+  "p = ", rownames(tabTRi),
+  "; z = ", round(z_scores,3)
+)
+
+tabTRi
+```
+
+## Item 7
+```{r}
+tabTRi <- tabTR[[6]]
+
+rownames(tabTRi) <- paste0(
+  "p = ", rownames(tabTRi),
+  "; z = ", round(z_scores,3)
+)
+
+tabTRi
+```
+
+## Item 8
+```{r}
+tabTRi <- tabTR[[7]]
+
+rownames(tabTRi) <- paste0(
+  "p = ", rownames(tabTRi),
+  "; z = ", round(z_scores,3)
+)
+
+tabTRi
+```
+
+## Item 9
+```{r}
+tabTRi <- tabTR[[8]]
+
+rownames(tabTRi) <- paste0(
+  "p = ", rownames(tabTRi),
+  "; z = ", round(z_scores,3)
+)
+
+tabTRi
+```
+
+## Item 10
+```{r}
+tabTRi <- tabTR[[9]]
+
+rownames(tabTRi) <- paste0(
+  "p = ", rownames(tabTRi),
+  "; z = ", round(z_scores,3)
+)
+
+tabTRi
+```
+
+## Item 11
+```{r}
+tabTRi <- tabTR[[10]]
+
+rownames(tabTRi) <- paste0(
+  "p = ", rownames(tabTRi),
+  "; z = ", round(z_scores,3)
+)
+
+tabTRi
+```
+
+## Item 12
+```{r}
+tabTRi <- tabTR[[11]]
+
+rownames(tabTRi) <- paste0(
+  "p = ", rownames(tabTRi),
+  "; z = ", round(z_scores,3)
+)
+
+tabTRi
+```
+
