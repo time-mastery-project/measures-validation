@@ -66,13 +66,14 @@ tabStudents
 
 ```{r}
 tabTD <- round(tabList[["TD"]],2)
+tabTD_inverted <- tabTD[nrow(tabTD):1, ]
 
-rownames(tabTD) <- paste0(
+rownames(tabTD_inverted) <- paste0(
   "p = ", rownames(tabTD),
   "; z = ", round(z_scores,3)
 )
 
-tabTD
+tabTD_inverted
 ```
 
 \newpage
@@ -82,26 +83,28 @@ tabTD
 
 ```{r}
 tabTEB <- round(tabList[["teB"]],2)
+tabTEB_inverted <- tabTEB[nrow(tabTEB):1, ]
 
-rownames(tabTEB) <- paste0(
+rownames(tabTEB_inverted) <- paste0(
   "p = ", rownames(tabTEB),
   "; z = ", round(z_scores,3)
 )
 
-tabTEB
+tabTEB_inverted
 ```
 
 ## Thief
 
 ```{r}
 tabTEL <- round(tabList[["teL"]],2)
+tabTEL_inverted <- tabTEL[nrow(tabTEL):1, ]
 
-rownames(tabTEL) <- paste0(
+rownames(tabTEL_inverted) <- paste0(
   "p = ", rownames(tabTEL),
   "; z = ", round(z_scores,3)
 )
 
-tabTEL
+tabTEL_inverted
 ```
 
 \newpage
@@ -116,132 +119,143 @@ tabTR <- tabList[["TR"]]
 ## Item 2
 ```{r}
 tabTRi <- round(tabTR[[1]],2)
+tabTRi_inverted <- tabTRi[nrow(tabTRi):1, ]
 
-rownames(tabTRi) <- paste0(
+rownames(tabTRi_inverted) <- paste0(
   "p = ", rownames(tabTRi),
   "; z = ", round(z_scores,3)
 )
 
-tabTRi
+tabTRi_inverted
 ```
 
 ## Item 3
 ```{r}
 tabTRi <- round(tabTR[[2]],2)
+tabTRi_inverted <- tabTRi[nrow(tabTRi):1, ]
 
-rownames(tabTRi) <- paste0(
+rownames(tabTRi_inverted) <- paste0(
   "p = ", rownames(tabTRi),
   "; z = ", round(z_scores,3)
 )
 
-tabTRi
+tabTRi_inverted
 ```
 
 ## Item 4
 ```{r}
 tabTRi <- round(tabTR[[3]],2)
+tabTRi_inverted <- tabTRi[nrow(tabTRi):1, ]
 
-rownames(tabTRi) <- paste0(
+rownames(tabTRi_inverted) <- paste0(
   "p = ", rownames(tabTRi),
   "; z = ", round(z_scores,3)
 )
 
-tabTRi
+tabTRi_inverted
 ```
 
 ## Item 5
 ```{r}
 tabTRi <- round(tabTR[[4]],2)
+tabTRi_inverted <- tabTRi[nrow(tabTRi):1, ]
 
-rownames(tabTRi) <- paste0(
+rownames(tabTRi_inverted) <- paste0(
   "p = ", rownames(tabTRi),
   "; z = ", round(z_scores,3)
 )
 
-tabTRi
+tabTRi_inverted
 ```
 
 ## Item 6
 ```{r}
 tabTRi <- round(tabTR[[5]],2)
+tabTRi_inverted <- tabTRi[nrow(tabTRi):1, ]
 
-rownames(tabTRi) <- paste0(
+rownames(tabTRi_inverted) <- paste0(
   "p = ", rownames(tabTRi),
   "; z = ", round(z_scores,3)
 )
 
-tabTRi
+tabTRi_inverted
 ```
 
 ## Item 7
 ```{r}
 tabTRi <- round(tabTR[[6]],2)
+tabTRi_inverted <- tabTRi[nrow(tabTRi):1, ]
 
-rownames(tabTRi) <- paste0(
+rownames(tabTRi_inverted) <- paste0(
   "p = ", rownames(tabTRi),
   "; z = ", round(z_scores,3)
 )
 
-tabTRi
+tabTRi_inverted
 ```
 
 ## Item 8
 ```{r}
 tabTRi <- round(tabTR[[7]],2)
+tabTRi_inverted <- tabTRi[nrow(tabTRi):1, ]
 
-rownames(tabTRi) <- paste0(
+rownames(tabTRi_inverted) <- paste0(
   "p = ", rownames(tabTRi),
   "; z = ", round(z_scores,3)
 )
 
-tabTRi
+tabTRi_inverted
 ```
 
 ## Item 9
 ```{r}
 tabTRi <- round(tabTR[[8]],2)
+tabTRi_inverted <- tabTRi[nrow(tabTRi):1, ]
 
-rownames(tabTRi) <- paste0(
+rownames(tabTRi_inverted) <- paste0(
   "p = ", rownames(tabTRi),
   "; z = ", round(z_scores,3)
 )
 
-tabTRi
+tabTRi_inverted
 ```
 
 ## Item 10
 ```{r}
 tabTRi <- round(tabTR[[9]],2)
+tabTRi_inverted <- tabTRi[nrow(tabTRi):1, ]
 
-rownames(tabTRi) <- paste0(
+rownames(tabTRi_inverted) <- paste0(
   "p = ", rownames(tabTRi),
   "; z = ", round(z_scores,3)
 )
 
-tabTRi
+tabTRi_inverted
 ```
 
 ## Item 11
 ```{r}
 tabTRi <- round(tabTR[[10]],2)
+tabTRi_inverted <- tabTRi[nrow(tabTRi):1, ]
 
-rownames(tabTRi) <- paste0(
+rownames(tabTRi_inverted) <- paste0(
   "p = ", rownames(tabTRi),
   "; z = ", round(z_scores,3)
 )
 
-tabTRi
+tabTRi_inverted
 ```
 
 ## Item 12
 ```{r}
 tabTRi <- round(tabTR[[11]],2)
+tabTRi_inverted <- tabTRi[nrow(tabTRi):1, ]
 
-rownames(tabTRi) <- paste0(
+rownames(tabTRi_inverted) <- paste0(
   "p = ", rownames(tabTRi),
   "; z = ", round(z_scores,3)
 )
 
-tabTRi
+tabTRi_inverted
 ```
 
