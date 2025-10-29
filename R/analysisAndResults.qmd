@@ -39,9 +39,16 @@ nrow(df)
 dd = data.frame(read_excel(here("data/Data_Dictionary.xlsx")))
 dd$Var_name = gsub("[ °-]",".",dd$Var_name)
 
-ageBrack <- seq(from=6,to=10,by=0.2)
+ageBrack <- seq(from=6,to=12,by=0.25)
 
-perc_list <- seq(0.05,0.95,0.05)
+# perc_list <- seq(0.05,0.95,0.05) #
+perc_list <- c(0.00135, 0.00383, 0.00982,
+               0.02275, 0.04779, 0.09121,
+               0.15866, 0.25249, 0.36944,
+               .50,
+               0.63056, 0.74751, 0.84134,
+               0.90879, 0.95221, 0.97725,
+               0.99018, 0.99617, 0.99865) # 19 punti
 
 ```
 
@@ -961,10 +968,10 @@ fitMeasures(fit,fit.measures=fi)
 summary(fit,std=T)
 ```
 
-```{r, eval=FALSE}
+```{r, eval=TRUE}
 tabList <- list(norms_OTm,norms_qstP,norms_qstT,
                 norms_TD,norms_teB,norms_teL,
                 TR_norms_list)
 names(tabList) <- c("OTm", "QSTp", "QSTt", "TD", "teB", "teL","TR")
-saveRDS(tabList,"scoring/normPercTabs.RDS")
+saveRDS(tabList,here::here("scoring/normPercTabs.RDS"))
 ```

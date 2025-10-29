@@ -14,7 +14,7 @@ tabList <- readRDS("../scoring/normPercTabs.RDS")
 p_vals <- as.numeric(rownames(tabList[[1]]))
 
 # Convert to z-scores
-z_scores <- qnorm(p_vals)
+z_scores <- 1:19 #qnorm(p_vals)
 
 ```
 
@@ -65,7 +65,7 @@ tabStudents
 # Time Discrimination
 
 ```{r}
-tabTD <- tabList[["TD"]]
+tabTD <- round(tabList[["TD"]],2)
 
 rownames(tabTD) <- paste0(
   "p = ", rownames(tabTD),
@@ -81,7 +81,7 @@ tabTD
 ## Boat
 
 ```{r}
-tabTEB <- tabList[["teB"]]
+tabTEB <- round(tabList[["teB"]],2)
 
 rownames(tabTEB) <- paste0(
   "p = ", rownames(tabTEB),
@@ -94,7 +94,7 @@ tabTEB
 ## Thief
 
 ```{r}
-tabTEL <- tabList[["teL"]]
+tabTEL <- round(tabList[["teL"]],2)
 
 rownames(tabTEL) <- paste0(
   "p = ", rownames(tabTEL),
@@ -115,7 +115,7 @@ tabTR <- tabList[["TR"]]
 
 ## Item 2
 ```{r}
-tabTRi <- tabTR[[1]]
+tabTRi <- round(tabTR[[1]],2)
 
 rownames(tabTRi) <- paste0(
   "p = ", rownames(tabTRi),
@@ -127,7 +127,7 @@ tabTRi
 
 ## Item 3
 ```{r}
-tabTRi <- tabTR[[2]]
+tabTRi <- round(tabTR[[2]],2)
 
 rownames(tabTRi) <- paste0(
   "p = ", rownames(tabTRi),
@@ -139,7 +139,7 @@ tabTRi
 
 ## Item 4
 ```{r}
-tabTRi <- tabTR[[3]]
+tabTRi <- round(tabTR[[3]],2)
 
 rownames(tabTRi) <- paste0(
   "p = ", rownames(tabTRi),
@@ -151,7 +151,7 @@ tabTRi
 
 ## Item 5
 ```{r}
-tabTRi <- tabTR[[4]]
+tabTRi <- round(tabTR[[4]],2)
 
 rownames(tabTRi) <- paste0(
   "p = ", rownames(tabTRi),
@@ -163,7 +163,7 @@ tabTRi
 
 ## Item 6
 ```{r}
-tabTRi <- tabTR[[5]]
+tabTRi <- round(tabTR[[5]],2)
 
 rownames(tabTRi) <- paste0(
   "p = ", rownames(tabTRi),
@@ -175,7 +175,7 @@ tabTRi
 
 ## Item 7
 ```{r}
-tabTRi <- tabTR[[6]]
+tabTRi <- round(tabTR[[6]],2)
 
 rownames(tabTRi) <- paste0(
   "p = ", rownames(tabTRi),
@@ -187,7 +187,7 @@ tabTRi
 
 ## Item 8
 ```{r}
-tabTRi <- tabTR[[7]]
+tabTRi <- round(tabTR[[7]],2)
 
 rownames(tabTRi) <- paste0(
   "p = ", rownames(tabTRi),
@@ -199,7 +199,7 @@ tabTRi
 
 ## Item 9
 ```{r}
-tabTRi <- tabTR[[8]]
+tabTRi <- round(tabTR[[8]],2)
 
 rownames(tabTRi) <- paste0(
   "p = ", rownames(tabTRi),
@@ -211,7 +211,7 @@ tabTRi
 
 ## Item 10
 ```{r}
-tabTRi <- tabTR[[9]]
+tabTRi <- round(tabTR[[9]],2)
 
 rownames(tabTRi) <- paste0(
   "p = ", rownames(tabTRi),
@@ -223,7 +223,7 @@ tabTRi
 
 ## Item 11
 ```{r}
-tabTRi <- tabTR[[10]]
+tabTRi <- round(tabTR[[10]],2)
 
 rownames(tabTRi) <- paste0(
   "p = ", rownames(tabTRi),
@@ -235,7 +235,7 @@ tabTRi
 
 ## Item 12
 ```{r}
-tabTRi <- tabTR[[11]]
+tabTRi <- round(tabTR[[11]],2)
 
 rownames(tabTRi) <- paste0(
   "p = ", rownames(tabTRi),
