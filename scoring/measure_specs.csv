@@ -1,0 +1,22 @@
+measure,raw_type,direction_flag,raw_min_theoretical,raw_max_theoretical,abs_min,abs_max,raw_grid_n,notes
+TE_Barca_dd,continuous,lower_better,,,0,Inf,201.0,"Time Estimation deviation for the Barca stimulus, absolute deviation in seconds (0 is best)"
+TE_Ladro_dd,continuous,lower_better,,,0,Inf,201.0,"Time Estimation deviation for the Ladro stimulus, absolute deviation in seconds (0 is best)"
+TEdd_Mean,continuous,lower_better,,,0,Inf,201.0,Mean of TE_Barca_dd and TE_Ladro_dd (0 is best)
+TD,continuous,lower_better,,,0,Inf,201.0,Time Discrimination threshold ratio (lower is better)
+AverageDevAbs_TR,continuous,lower_better,,,0,Inf,201.0,"Time Reproduction, absolute average percent deviation from target across valid trials (0 is best)"
+PercDevAbs_TR_2,continuous,lower_better,,,0,Inf,201.0,"Time Reproduction, absolute percent deviation for target duration 2 seconds (0 is best)"
+PercDevAbs_TR_3,continuous,lower_better,,,0,Inf,201.0,"Time Reproduction, absolute percent deviation for target duration 3 seconds (0 is best)"
+PercDevAbs_TR_4,continuous,lower_better,,,0,Inf,201.0,"Time Reproduction, absolute percent deviation for target duration 4 seconds (0 is best)"
+PercDevAbs_TR_5,continuous,lower_better,,,0,Inf,201.0,"Time Reproduction, absolute percent deviation for target duration 5 seconds (0 is best)"
+PercDevAbs_TR_6,continuous,lower_better,,,0,Inf,201.0,"Time Reproduction, absolute percent deviation for target duration 6 seconds (0 is best)"
+PercDevAbs_TR_7,continuous,lower_better,,,0,Inf,201.0,"Time Reproduction, absolute percent deviation for target duration 7 seconds (0 is best)"
+PercDevAbs_TR_8,continuous,lower_better,,,0,Inf,201.0,"Time Reproduction, absolute percent deviation for target duration 8 seconds (0 is best)"
+PercDevAbs_TR_9,continuous,lower_better,,,0,Inf,201.0,"Time Reproduction, absolute percent deviation for target duration 9 seconds (0 is best)"
+PercDevAbs_TR_10,continuous,lower_better,,,0,Inf,201.0,"Time Reproduction, absolute percent deviation for target duration 10 seconds (0 is best)"
+PercDevAbs_TR_11,continuous,lower_better,,,0,Inf,201.0,"Time Reproduction, absolute percent deviation for target duration 11 seconds (0 is best)"
+PercDevAbs_TR_12,continuous,lower_better,,,0,Inf,201.0,"Time Reproduction, absolute percent deviation for target duration 12 seconds (0 is best)"
+OTm_orientation,integer,higher_better,0.0,10.0,0,10,,"TMOQ_c Time Orientation subscale, sum of 10 dichotomous items (0-10, higher is better)"
+OTm_management,integer,higher_better,0.0,6.0,0,6,,"TMOQ_c Time Management subscale, sum of 6 dichotomous items (0-6, higher is better)"
+OTm_total,integer,higher_better,0.0,16.0,0,16,,"TMOQ_c total score, sum of 16 dichotomous items (0-16, higher is better)"
+QST_parent_total,integer,higher_better,0.0,30.0,0,30,,"TMOQ_p total score, 10 items rated 0-3 (0-30, higher is better)"
+QST_teacher_total,integer,higher_better,0.0,30.0,0,30,,"TMOQ_t total score, 10 items rated 0-3 (0-30, higher is better)"
