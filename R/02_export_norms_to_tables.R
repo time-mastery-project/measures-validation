@@ -414,4 +414,16 @@ if (nrow(bad_order) > 0) {
 write_csv(norms_lookup, OUT_LOOKUP)
 write_csv(ss_to_raw_intervals, OUT_SSINT)
 
+# ------------------------------------------------------------
+# Transfer everything to shiny app folder
+# ------------------------------------------------------------
+dir.create("shiny/", recursive = TRUE, showWarnings = FALSE)
+files <- list.files("scoring/", full.names = TRUE, recursive = FALSE)
+files <- files[file.info(files)$isdir == FALSE]
+file.copy(files, to = "shiny/", overwrite = TRUE)
+
+# ------------------------------------------------------------
+# Final message
+# ------------------------------------------------------------
 message("02_export_norms_to_tables.R completed successfully.")
+
