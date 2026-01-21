@@ -6,7 +6,6 @@
 # - scoring/SoT_totalConversionTable.csv
 # - scoring/SoTQ_CI_params.csv (optional)
 # - scoring/SoTQ_profileSpreadThreshold.csv (optional)
-# - scoring/TR_total_norm_params.csv (required for TR total)
 #
 # Plot tuning:
 # - Change PLOT_TEXT_SIZE to quickly tune all plot labels.
@@ -18,7 +17,6 @@ suppressPackageStartupMessages({
   library(stringr)
   library(ggplot2)
   library(tibble)
-  library(tidyr)
 })
 
 # -------------------------
@@ -131,24 +129,14 @@ is_whole_number <- function(x, tol = 1e-9) {
   abs(x - round(x)) < tol
 }
 
-nearest_age <- function(age_value, age_grid) {
-  age_value <- suppressWarnings(as.numeric(age_value))
-  age_grid <- suppressWarnings(as.numeric(age_grid))
-  age_grid <- age_grid[is.finite(age_grid)]
-  if (!is.finite(age_value) || !length(age_grid)) return(NA_real_)
-  age_grid[which.min(abs(age_grid - age_value))]
-}
-
 # -------------------------
 # Measures mapping (names must match the norms table)
 # -------------------------
 
-TR_ITEM_SECONDS <- 2:12
-TR_ITEM_MEASURES <- paste0("PercDevAbs_TR_", TR_ITEM_SECONDS)
-
 MEASURES <- list(
   TE_BOAT = "TE_Barca_dd",
   TE_THIEF = "TE_Ladro_dd",
+  TR = "AverageDevAbs_TR",
   TD = "TD",
   CHILD_ORIENTATION = "OTm_orientation",
   CHILD_MANAGEMENT = "OTm_management",
@@ -182,6 +170,7 @@ if (!is.na(.NORMS_PATH)) {
   .NORMS <- suppressWarnings(read_csv(.NORMS_PATH, show_col_types = FALSE))
   names(.NORMS) <- normalize_names(names(.NORMS))
   
+  # Required columns for lookup
   req_cols <- c("measure", "age", "raw", "z_aligned")
   if (all(req_cols %in% names(.NORMS))) {
     .NORMS <- .NORMS %>%
@@ -242,44 +231,6 @@ if (!is.na(.SOTQ_SPREAD_PATH)) {
     th <- to_num(sp$threshold[1])
     if (is.finite(th)) .SOTQ_SPREAD_THRESH <- th
   }
-}
-
-.TR_TOTAL_PARAMS_PATH <- find_file(file.path("scoring", "TR_total_norm_params.csv"))
-.TR_TOTAL_PARAMS <- NULL
-.TR_TOTAL_MU_GLOBAL <- NA_real_
-.TR_TOTAL_SD_GLOBAL <- NA_real_
-
-if (!is.na(.TR_TOTAL_PARAMS_PATH)) {
-  tp <- suppressWarnings(read_csv(.TR_TOTAL_PARAMS_PATH, show_col_types = FALSE))
-  names(tp) <- normalize_names(names(tp))
-  if (all(c("age", "mu", "sigma") %in% names(tp))) {
-    tp <- tp %>%
-      mutate(age = to_num(.data$age), mu = to_num(.data$mu), sigma = to_num(.data$sigma)) %>%
-      filter(is.finite(.data$age), is.finite(.data$mu), is.finite(.data$sigma), .data$sigma > 0) %>%
-      arrange(.data$age)
-    if (nrow(tp) > 0) {
-      .TR_TOTAL_PARAMS <- tp
-      if ("mu_global" %in% names(tp)) .TR_TOTAL_MU_GLOBAL <- to_num(tp$mu_global[1])
-      if ("sigma_global" %in% names(tp)) .TR_TOTAL_SD_GLOBAL <- to_num(tp$sigma_global[1])
-      if (!is.finite(.TR_TOTAL_MU_GLOBAL)) .TR_TOTAL_MU_GLOBAL <- mean(tp$mu, na.rm = TRUE)
-      if (!is.finite(.TR_TOTAL_SD_GLOBAL)) .TR_TOTAL_SD_GLOBAL <- mean(tp$sigma, na.rm = TRUE)
-    }
-  }
-}
-
-get_tr_total_mu_sigma <- function(age_grid_value) {
-  if (is.null(.TR_TOTAL_PARAMS) || nrow(.TR_TOTAL_PARAMS) < 1) {
-    return(list(mu = NA_real_, sigma = NA_real_, note = "TR total norm parameters missing"))
-  }
-  age_in <- suppressWarnings(as.numeric(age_grid_value))
-  if (!is.finite(age_in)) return(list(mu = NA_real_, sigma = NA_real_, note = NA_character_))
-  
-  ages <- .TR_TOTAL_PARAMS$age
-  a0 <- nearest_age(age_in, ages)
-  if (!is.finite(a0)) return(list(mu = .TR_TOTAL_MU_GLOBAL, sigma = .TR_TOTAL_SD_GLOBAL, note = NA_character_))
-  
-  row <- .TR_TOTAL_PARAMS[which.min(abs(ages - a0)), , drop = FALSE]
-  list(mu = row$mu[1], sigma = row$sigma[1], note = NA_character_)
 }
 
 # -------------------------
@@ -445,60 +396,15 @@ score_tr_from_csv <- function(path) {
   }
   
   out <- out %>%
-    mutate(
-      target = to_num(.data$target),
-      response = to_num(.data$response),
-      devabs = 100 * abs(.data$response - .data$target) / .data$target
-    ) %>%
-    filter(is.finite(.data$target), is.finite(.data$response)) %>%
+    mutate(devabs = 100 * abs(.data$response - .data$target) / .data$target) %>%
     filter(.data$response > 0.100, .data$response < 36)
   
   if (nrow(out) < 1) stop("TR, no valid trials after filtering (<100 ms or >36 s removed).")
   
-  out <- out %>% mutate(target_int = as.integer(round(.data$target)))
-  
-  per_dur_obs <- out %>%
-    filter(.data$target_int %in% TR_ITEM_SECONDS) %>%
-    group_by(.data$target_int) %>%
-    summarise(
-      n_valid = dplyr::n(),
-      devabs_mean = mean(.data$devabs, na.rm = TRUE),
-      .groups = "drop"
-    ) %>%
-    arrange(.data$target_int)
-  
-  per_dur <- tibble(target_int = TR_ITEM_SECONDS) %>%
-    left_join(per_dur_obs, by = "target_int") %>%
-    mutate(
-      n_valid = ifelse(is.na(.data$n_valid), 0L, as.integer(.data$n_valid)),
-      devabs_mean = ifelse(is.na(.data$devabs_mean), NA_real_, .data$devabs_mean)
-    ) %>%
-    arrange(.data$target_int)
-  
-  per_dur_raw <- setNames(per_dur$devabs_mean, paste0("PercDevAbs_TR_", per_dur$target_int))
-  
-  missing_targets <- per_dur$target_int[!is.finite(per_dur$devabs_mean)]
-  complete_flag <- length(missing_targets) == 0
-  
-  overall <- mean(out$devabs, na.rm = TRUE)
-  
-  msg_parts <- c(
-    sprintf("TR, overall absolute average deviation is %.2f%% (for reference).", overall),
-    "TR total is standardized using the 11 per-duration deviations (2 to 12 seconds)."
-  )
-  if (!complete_flag) {
-    msg_parts <- c(msg_parts, paste0("Missing target durations: ", paste(missing_targets, collapse = ", "), "."))
-  }
-  
-  per_line <- paste0(sprintf("%ds=%.2f", per_dur$target_int, per_dur$devabs_mean), collapse = "; ")
-  
+  score <- mean(out$devabs, na.rm = TRUE)
   list(
-    overall_devabs = overall,
-    per_duration_raw = per_dur_raw,
-    per_duration_table = per_dur,
-    complete = complete_flag,
-    message = paste(msg_parts, collapse = " "),
-    per_duration_line = paste0("TR per-duration mean devabs (%), ", per_line, ".")
+    raw = score,
+    message = sprintf("TR, absolute average deviation is %.2f%%.", score)
   )
 }
 
@@ -517,6 +423,7 @@ lookup_sotq_from_sumss <- function(sumSS) {
     return(list(sotq = round(sotq), note = NA_character_))
   }
   
+  # Should not happen if table covers all integer sums, keep robust:
   list(sotq = NA_real_, note = "sumSS not found in SoTQ conversion table")
 }
 
@@ -549,8 +456,8 @@ ui <- fluidPage(
       
       tags$hr(),
       h4("Time Reproduction"),
-      helpText("Upload the TR PsychoPy or OpenSesame CSV. Manual entry is disabled for TR total."),
       fileInput("tr_file", "Upload TR PsychoPy or OpenSesame CSV", accept = c(".csv")),
+      numericInput("tr_manual", "Manual entry, absolute average percent deviation", value = NA, min = 0),
       
       tags$hr(),
       h4("Time Discrimination"),
@@ -600,6 +507,7 @@ ui <- fluidPage(
 
 server <- function(input, output, session) {
   
+  # If norms are loaded, tighten the age "Years" UI range to something reasonable
   observe({
     if (is.null(.NORMS) || !is.finite(.NORMS_AGE_MAX)) return()
     
@@ -609,7 +517,9 @@ server <- function(input, output, session) {
       ceiling(.NORMS_AGE_MAX / 12)
     }
     
+    # Keep some safety, but make it hard to type extreme ages by mistake
     max_years <- clamp(max_years, 1, 30)
+    
     updateNumericInput(session, "age_years", max = max_years)
   })
   
@@ -648,18 +558,6 @@ server <- function(input, output, session) {
       )))
     }
     
-    if (is.null(.TR_TOTAL_PARAMS)) {
-      items <- c(items, list(div(
-        style = "color:#b30000; font-weight:600;",
-        "WARNING: TR total norm parameters missing (scoring/TR_total_norm_params.csv), TR total cannot be computed from uploads."
-      )))
-    } else {
-      items <- c(items, list(div(
-        style = "color:#1f7a1f; font-weight:600;",
-        sprintf("TR total norm parameters loaded, %s.", .TR_TOTAL_PARAMS_PATH)
-      )))
-    }
-    
     if (!is.finite(.SOTQ_HALF90)) {
       items <- c(items, list(div(
         style = "color:#8a6d3b; font-weight:600;",
@@ -686,6 +584,7 @@ server <- function(input, output, session) {
       need(is.finite(input$age_months) && input$age_months >= 0 && input$age_months <= 11, "Age (months) must be between 0 and 11.")
     )
     
+    # Compute age in the norms grid units
     age_grid_entered <- age_to_grid_unit(input$age_years, input$age_months, .GRID_AGE_UNIT)
     validate(need(is.finite(age_grid_entered), "Age is invalid."))
     
@@ -738,13 +637,10 @@ server <- function(input, output, session) {
       info_msgs <- c(info_msgs, sprintf("TD, manual entry used, Ratio = %.3f.", td_raw))
     }
     
-    # TR: upload is required for the new per-duration procedure
-    tr_overall_devabs <- NA_real_
-    tr_z_total <- NA_real_
-    tr_ss_total <- NA_real_
-    tr_note <- NA_character_
-    
+    # TR: upload has priority over manual, but manual+upload is a top warning
+    tr_raw <- NA_real_
     tr_upload_ok <- FALSE
+    tr_manual_present <- is.finite(to_num(input$tr_manual))
     tr_upload_present <- !is.null(input$tr_file) && nzchar(input$tr_file$datapath)
     
     if (tr_upload_present) {
@@ -752,60 +648,22 @@ server <- function(input, output, session) {
       if (inherits(tr_res, "error")) {
         warn_msgs <- c(warn_msgs, paste0("TR upload error, ", tr_res$message))
       } else {
+        tr_raw <- tr_res$raw
         tr_upload_ok <- TRUE
-        tr_overall_devabs <- tr_res$overall_devabs
-        info_msgs <- c(info_msgs, tr_res$message, tr_res$per_duration_line)
-        
-        if (is.null(.TR_TOTAL_PARAMS)) {
-          warn_msgs <- c(
-            warn_msgs,
-            "TR total cannot be computed because TR_total_norm_params.csv is missing or invalid. Re-run R/04_build_SoTQ_table.R to generate it."
-          )
-        } else if (!isTRUE(tr_res$complete)) {
-          warn_msgs <- c(
-            warn_msgs,
-            "TR is incomplete, at least one target duration (2 to 12 seconds) has no valid trials. TR total is not computed."
-          )
-        } else {
-          z_items <- rep(NA_real_, length(TR_ITEM_SECONDS))
-          notes <- character(0)
-          
-          for (i in seq_along(TR_ITEM_SECONDS)) {
-            tsec <- TR_ITEM_SECONDS[i]
-            mname <- paste0("PercDevAbs_TR_", tsec)
-            raw_t <- tr_res$per_duration_raw[[mname]]
-            st <- lookup_z_from_grid(mname, age_grid_used, raw_t)
-            z_items[i] <- st$z
-            if (!is.na(st$note)) notes <- c(notes, paste0(mname, ": ", st$note))
-          }
-          
-          if (any(!is.finite(z_items))) {
-            warn_msgs <- c(
-              warn_msgs,
-              "TR total could not be computed because one or more duration-specific norms lookups failed."
-            )
-          } else {
-            z_mean <- mean(z_items)
-            pars <- get_tr_total_mu_sigma(age_grid_used)
-            if (!is.finite(pars$mu) || !is.finite(pars$sigma) || pars$sigma <= 0) {
-              warn_msgs <- c(warn_msgs, "TR total norm parameters are invalid for this age, TR total not computed.")
-            } else {
-              tr_z_total <- (z_mean - pars$mu) / pars$sigma
-              tr_ss_total <- scaled_from_z(tr_z_total)
-              
-              tr_note <- "TR total is computed as the mean of 11 duration-specific aligned z values (2 to 12 seconds), then re-standardized using TR_total_norm_params.csv."
-              if (length(notes) > 0) tr_note <- paste(tr_note, "Lookup notes,", paste(unique(notes), collapse = "; "))
-              
-              info_msgs <- c(
-                info_msgs,
-                sprintf("TR total, mean item z = %.3f, re-standardized z = %.3f, SS = %d.", z_mean, tr_z_total, as.integer(tr_ss_total))
-              )
-            }
-          }
-        }
+        info_msgs <- c(info_msgs, tr_res$message)
       }
-    } else {
-      info_msgs <- c(info_msgs, "TR not computed, no TR file was uploaded.")
+    }
+    
+    if (tr_upload_present && tr_manual_present) {
+      warn_msgs <- c(
+        warn_msgs,
+        "VERY IMPORTANT: TR, both a file upload and a manual value were provided. The app uses the uploaded file score and ignores the manual value."
+      )
+    }
+    
+    if (!tr_upload_ok && tr_manual_present) {
+      tr_raw <- to_num(input$tr_manual)
+      info_msgs <- c(info_msgs, sprintf("TR, manual entry used, deviation = %.2f%%.", tr_raw))
     }
     
     # TE raw inputs
@@ -880,6 +738,7 @@ server <- function(input, output, session) {
       }
     }
     
+    # Parent and teacher
     parent_total <- to_num(input$parent_total)
     teacher_total <- to_num(input$teacher_total)
     
@@ -934,13 +793,7 @@ server <- function(input, output, session) {
       z = te_z,
       note = te_note
     ))
-    results <- bind_rows(results, tibble(
-      subtest = "Time Reproduction",
-      raw = tr_overall_devabs,
-      ss = tr_ss_total,
-      z = tr_z_total,
-      note = tr_note
-    ))
+    results <- bind_rows(results, add_row("Time Reproduction", tr_raw, MEASURES$TR))
     results <- bind_rows(results, add_row("Time Discrimination", td_raw, MEASURES$TD))
     
     results <- bind_rows(results, add_row("Child questionnaire, Time orientation", child_orientation, MEASURES$CHILD_ORIENTATION))
@@ -1010,6 +863,7 @@ server <- function(input, output, session) {
     )
   })
   
+  # Top warnings (must stay on top)
   output$warnings_top <- renderUI({
     req(input$compute)
     res <- computed()
@@ -1027,6 +881,7 @@ server <- function(input, output, session) {
     )
   })
   
+  # Bottom details (informational messages)
   output$task_messages <- renderText({
     req(input$compute)
     res <- computed()
@@ -1124,6 +979,7 @@ server <- function(input, output, session) {
     n <- nrow(df_plot)
     
     p <- ggplot() +
+      # Typical range band (robust, simple)
       geom_rect(
         aes(xmin = 0.5, xmax = n + 0.5, ymin = 7, ymax = 13),
         alpha = 0.20,

@@ -1,2 +1,2 @@
-data_file,N_used,rho_alpha,omega_total,SD_SoTQ,SEM,zcrit90,halfwidth90
-Database_Time_16_05_25_PD_MI.xlsx,90,-0.3314489934065475,0.20082277776946325,15,17.308264601527018,1.645,28.472095269511943
+data_file,N_used,rho_alpha,omega_total,SD_SoTQ,SEM,zcrit90,halfwidth90,rho_used,rho_source,R_source,N_total,N_complete6,N_pairwise_min,N_pairwise_median
+Database_Time_17.07.25_PD&MI.xlsx,415,0.6127174174614444,0.6220892713708098,15,9.22116662584338,1.6448536269514715,15.167469369242347,0.6220892713708098,omega_total,pairwise,729,84,123,415

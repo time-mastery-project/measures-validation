@@ -1,2 +1,2 @@
 definition,percentile,threshold,n_complete,k_indicators
-deltaSS = max(SS_6_indicators) - min(SS_6_indicators),0.95,14,86,6
+deltaSS = max(SS_6_indicators) - min(SS_6_indicators),0.95,10,83,6

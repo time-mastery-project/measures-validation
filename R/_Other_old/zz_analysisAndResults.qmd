@@ -27,7 +27,7 @@ library(gamlss)
 library(gamlss.dist)  # LOGNO, qLOGNO, etc.
 library(gamlss.add)   # smoothers like pb()
 
-source(here("R/custom-functions.R"))
+# source(here("R/custom-functions.R"))
 fi = c("rmsea","srmr","cfi","nnfi")
 
 #df <- readxl::read_excel("data/Database_Time_16_05_25_PD_MI.xlsx")
@@ -966,6 +966,24 @@ fitMeasures(fit,fit.measures=fi)
 #| label: general-factor-model-mi-summary
 
 summary(fit,std=T)
+```
+
+```{r}
+#| label: reliability
+d_z$TD_zn <- -1*d_z$TD_z
+d_z$TE_zn <- -1*d_z$TE_z
+d_z$TR_zn <- -1*d_z$TR_z
+
+g_model <- "
+g =~ qstp_parent_z+qstp_teacher_z+OTm_z+TD_zn+TE_zn+TR_zn
+#TD_z~~TR_z
+"
+fit = cfa(model=g_model, data=d_z, missing = "fiml",std.lv=T)
+
+semTools::reliability(fit)
+
+semTools::compRelSEM(fit)
+
 ```
 
 ```{r, eval=TRUE}

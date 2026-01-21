@@ -1,55 +1,53 @@
 # R/04_build_SoTQ_table.R
 # ------------------------------------------------------------
-# Build a table-based Sense of Time Quotient (SoTQ), replicable manually.
+# Build:
+#  1) scoring/SoT_totalConversionTable.csv (sumSS -> SoTQ)
+#  2) scoring/SoTQ_profileSpreadThreshold.csv (profile spread threshold)
+#  3) scoring/TR_total_norm_params.csv (age-specific mu/sigma for TR total)
 #
-# Outputs:
-#  - scoring/SoT_totalConversionTable.csv
-#      sumSS (sum of 6 SS indicators) -> SoTQ (M=100, SD=15)
-#  - scoring/SoTQ_profileSpreadThreshold.csv
-#      deltaSS = max(SS) - min(SS), 95th percentile (heterogeneity flag)
+# TR total is defined as:
+#  - compute z_aligned for PercDevAbs_TR_2..12 (each normed separately)
+#  - m = mean(z_aligned_2..12) if all 11 are present
+#  - z_TR_total = (m - mu_age) / sigma_age using exported TR_total_norm_params.csv
 #
-# Paper-aligned 6 indicators for SoTQ:
-#   1) TE composite = mean of aligned z from TE_Barca_dd and TE_Ladro_dd
-#   2) TR = AverageDevAbs_TR  (temporary, item-level 2..12 s to be added later)
-#   3) TD = RatioTD mapped via measure "TD"
-#   4) Child questionnaire total = OTm_total
-#   5) Parent questionnaire total = QSTp_Total_parent mapped via "QST_parent_total"
-#   6) Teacher questionnaire total = QSTp_Total_teacher mapped via "QST_teacher_total"
-#
-# IMPORTANT:
-# - Uses scoring/norms_lookup.csv (new pipeline), not the old exported grid.
-# - SoTQ table is derived from the empirical correlation matrix of the 6 SS indicators.
+# Run from project root.
 # ------------------------------------------------------------
 
 rm(list = ls())
 
 suppressPackageStartupMessages({
   library(here)
-  library(dplyr)
-  library(readr)
   library(readxl)
+  library(readr)
+  library(dplyr)
   library(tibble)
 })
 
 # -----------------------------
 # Config
 # -----------------------------
-NORMS_LOOKUP <- here("scoring/norms_lookup.csv")
-DATA_XLSX    <- here("data/Database_Time_16_05_25_PD_MI.xlsx")
+NORMS_LOOKUP <- here("scoring", "norms_lookup.csv")
 
-OUT_TABLE    <- here("scoring/SoT_totalConversionTable.csv")
-OUT_SPREAD   <- here("scoring/SoTQ_profileSpreadThreshold.csv")
+# Pick the latest Database_Time_*.xlsx in data/
+db_files <- list.files(here("data"), pattern = "^Database_Time_.*\\.xlsx$", full.names = TRUE)
+if (!length(db_files)) stop("No Database_Time_*.xlsx found in data/.", call. = FALSE)
+DATA_XLSX <- db_files[which.max(file.info(db_files)$mtime)]
 
-STOP_IF_MISSING_TR_TOTAL <- TRUE
-SOTQ_CLAMP <- c(40, 160)  # set to c(-Inf, Inf) to disable clamping
+OUT_TABLE    <- here("scoring", "SoT_totalConversionTable.csv")
+OUT_SPREAD   <- here("scoring", "SoTQ_profileSpreadThreshold.csv")
+OUT_TRPARAMS <- here("scoring", "TR_total_norm_params.csv")
+
+SOTQ_CLAMP <- c(40, 160)
+
+TR_SECONDS <- 2:12
+TR_ITEMS   <- paste0("PercDevAbs_TR_", TR_SECONDS)
+
+# If an age cell has small N, shrink mu/sigma toward global values
+MIN_N_PER_AGE <- 5
 
 # -----------------------------
 # Helpers
 # -----------------------------
-need_file <- function(path) {
-  if (!file.exists(path)) stop("File not found: ", path, call. = FALSE)
-}
-
 to_num <- function(x) {
   if (is.null(x)) return(NA_real_)
   if (is.factor(x)) x <- as.character(x)
@@ -62,15 +60,22 @@ to_num <- function(x) {
 
 clamp <- function(x, lo, hi) pmin(pmax(x, lo), hi)
 
-# linear interpolation with boundary capping
+normalize_names <- function(x) {
+  x <- enc2utf8(x)
+  x <- gsub("^\ufeff", "", x)
+  x <- trimws(x)
+  x <- tolower(x)
+  x <- gsub("[^a-z0-9]+", "_", x)
+  x <- gsub("^_+|_+$", "", x)
+  x <- gsub("_+", "_", x)
+  make.unique(x, sep = "_")
+}
+
 lin_interp <- function(x, y, x0) {
-  x <- suppressWarnings(as.numeric(x))
-  y <- suppressWarnings(as.numeric(y))
-  x0 <- suppressWarnings(as.numeric(x0))
-  
+  x <- to_num(x); y <- to_num(y); x0 <- to_num(x0)
   ok <- is.finite(x) & is.finite(y)
   x <- x[ok]; y <- y[ok]
-  if (!length(x) || !is.finite(x0)) return(NA_real_)
+  if (!is.finite(x0) || length(x) < 2) return(NA_real_)
   
   if (any(x == x0)) return(y[which(x == x0)[1]])
   if (x0 <= min(x)) return(y[which.min(x)])
@@ -80,7 +85,6 @@ lin_interp <- function(x, y, x0) {
   hi <- which(xs > x0)[1]
   lo <- hi - 1
   x1 <- xs[lo]; x2 <- xs[hi]
-  
   y1 <- y[which(x == x1)[1]]
   y2 <- y[which(x == x2)[1]]
   
@@ -88,136 +92,135 @@ lin_interp <- function(x, y, x0) {
 }
 
 nearest_age <- function(age_value, age_grid) {
-  age_value <- suppressWarnings(as.numeric(age_value))
-  age_grid <- suppressWarnings(as.numeric(age_grid))
+  age_value <- to_num(age_value)
+  age_grid <- to_num(age_grid)
   age_grid <- age_grid[is.finite(age_grid)]
   if (!is.finite(age_value) || !length(age_grid)) return(NA_real_)
   age_grid[which.min(abs(age_grid - age_value))]
 }
 
-# z -> SS (1-19), vectorized and safe
-z_to_ss19 <- function(z) {
-  z <- suppressWarnings(as.numeric(z))
-  ss <- round(10 + 3 * z)
-  ss[!is.finite(ss)] <- NA_real_
-  clamp(ss, 1, 19)
-}
-
 lookup_z_aligned <- function(norms, measure, age, raw) {
-  if (is.null(measure) || !nzchar(measure)) return(NA_real_)
-  age <- suppressWarnings(as.numeric(age))
-  raw <- suppressWarnings(as.numeric(raw))
+  age <- to_num(age); raw <- to_num(raw)
   if (!is.finite(age) || !is.finite(raw)) return(NA_real_)
   
-  n_m <- norms %>% filter(.data$measure == !!measure)
-  if (nrow(n_m) == 0) return(NA_real_)
+  dfm <- norms %>% filter(.data$measure == !!measure)
+  if (nrow(dfm) < 2) return(NA_real_)
   
-  a0 <- nearest_age(age, unique(n_m$age))
-  if (!is.finite(a0)) return(NA_real_)
+  ages <- sort(unique(dfm$age))
+  if (!length(ages)) return(NA_real_)
   
-  g <- n_m %>%
-    filter(.data$age == !!a0) %>%
-    transmute(raw = to_num(.data$raw), z_aligned = to_num(.data$z_aligned)) %>%
+  age_cap <- clamp(age, min(ages), max(ages))
+  a_near <- nearest_age(age_cap, ages)
+  if (!is.finite(a_near)) return(NA_real_)
+  
+  dfa <- dfm %>%
+    filter(.data$age == !!a_near) %>%
+    transmute(raw = .data$raw, z_aligned = .data$z_aligned) %>%
     filter(is.finite(.data$raw), is.finite(.data$z_aligned))
   
-  if (nrow(g) < 2) return(NA_real_)
+  if (nrow(dfa) < 2) return(NA_real_)
   
-  # ensure strictly increasing x for interpolation (collapse duplicates)
-  g2 <- g %>%
+  # collapse duplicates for stable interpolation
+  dfa2 <- dfa %>%
     group_by(.data$raw) %>%
     summarise(z_aligned = mean(.data$z_aligned), .groups = "drop") %>%
     arrange(.data$raw)
   
-  if (nrow(g2) < 2) return(NA_real_)
-  lin_interp(g2$raw, g2$z_aligned, raw)
+  if (nrow(dfa2) < 2) return(NA_real_)
+  lin_interp(dfa2$raw, dfa2$z_aligned, raw)
+}
+
+# vectorized, safe for dplyr::across
+z_to_ss19 <- function(z) {
+  z <- to_num(z)
+  ss <- rep(NA_real_, length(z))
+  ok <- is.finite(z)
+  ss[ok] <- round(10 + 3 * z[ok])
+  ss <- clamp(ss, 1, 19)
+  as.integer(ss)
 }
 
 # -----------------------------
 # Load inputs
 # -----------------------------
-need_file(NORMS_LOOKUP)
-need_file(DATA_XLSX)
+if (!file.exists(DATA_XLSX)) stop("DATA_XLSX not found: ", DATA_XLSX, call. = FALSE)
+if (!file.exists(NORMS_LOOKUP)) stop("Missing norms lookup: ", NORMS_LOOKUP, call. = FALSE)
 
-norms <- suppressMessages(read_csv(NORMS_LOOKUP, show_col_types = FALSE))
-names(norms) <- tolower(names(norms))
+dat_raw <- read_excel(DATA_XLSX)
+dat <- as.data.frame(dat_raw)
 
-required_norms_cols <- c("measure", "age", "raw", "z_aligned", "ss_1_19")
-miss_norms <- setdiff(required_norms_cols, names(norms))
-if (length(miss_norms)) {
-  stop("norms_lookup.csv missing columns: ", paste(miss_norms, collapse = ", "), call. = FALSE)
-}
+norms <- read_csv(NORMS_LOOKUP, show_col_types = FALSE)
+names(norms) <- normalize_names(names(norms))
+
+req_norms <- c("measure", "age", "raw", "z_aligned")
+miss_norms <- setdiff(req_norms, names(norms))
+if (length(miss_norms) > 0) stop("norms_lookup.csv missing columns: ", paste(miss_norms, collapse = ", "), call. = FALSE)
 
 norms <- norms %>%
   mutate(
+    measure = as.character(.data$measure),
     age = to_num(.data$age),
     raw = to_num(.data$raw),
-    z_aligned = to_num(.data$z_aligned),
-    ss_1_19 = to_num(.data$ss_1_19)
+    z_aligned = to_num(.data$z_aligned)
   ) %>%
-  filter(is.finite(.data$age), is.finite(.data$raw), is.finite(.data$z_aligned))
+  filter(is.finite(.data$age), is.finite(.data$raw), is.finite(.data$z_aligned), !is.na(.data$measure))
 
-dat <- as.data.frame(read_excel(DATA_XLSX))
+age_grid <- sort(unique(norms$age))
 
-# optional inclusion filter used in your pipeline
-if ("Class" %in% names(dat)) dat <- dat[!is.na(dat$Class), , drop = FALSE]
-
-if (!("Age" %in% names(dat))) stop("Dataset missing required column: Age", call. = FALSE)
+# -----------------------------
+# Required columns in dataset
+# -----------------------------
+if (!("Age" %in% names(dat))) stop("Dataset must contain column 'Age' (years).", call. = FALSE)
 dat$Age <- to_num(dat$Age)
 
-# -----------------------------
-# Build raw variables needed for the 6 SoTQ indicators
-# -----------------------------
-# Child questionnaire total (OTm_total)
-if (all(paste0("OTm_", 1:16) %in% names(dat))) {
-  dat$OTm_total <- rowSums(dat[, paste0("OTm_", 1:16)], na.rm = FALSE)
-} else if (!("OTm_total" %in% names(dat))) {
-  stop("Dataset missing OTm_total and OTm_1..OTm_16, cannot compute child total.", call. = FALSE)
-} else {
-  dat$OTm_total <- to_num(dat$OTm_total)
-}
-
-# TE raws must exist (absolute deviation for each video)
 if (!("TE_Barca_dd" %in% names(dat))) stop("Dataset missing TE_Barca_dd", call. = FALSE)
 if (!("TE_Ladro_dd" %in% names(dat))) stop("Dataset missing TE_Ladro_dd", call. = FALSE)
-dat$TE_Barca_dd <- to_num(dat$TE_Barca_dd)
-dat$TE_Ladro_dd <- to_num(dat$TE_Ladro_dd)
-
-# TD raw
 if (!("RatioTD" %in% names(dat))) stop("Dataset missing RatioTD", call. = FALSE)
-dat$RatioTD <- to_num(dat$RatioTD)
-
-# Parent/Teacher totals in dataset
 if (!("QSTp_Total_parent" %in% names(dat))) stop("Dataset missing QSTp_Total_parent", call. = FALSE)
 if (!("QSTp_Total_teacher" %in% names(dat))) stop("Dataset missing QSTp_Total_teacher", call. = FALSE)
-dat$QSTp_Total_parent  <- to_num(dat$QSTp_Total_parent)
+
+dat$TE_Barca_dd <- to_num(dat$TE_Barca_dd)
+dat$TE_Ladro_dd <- to_num(dat$TE_Ladro_dd)
+dat$RatioTD <- to_num(dat$RatioTD)
+dat$QSTp_Total_parent <- to_num(dat$QSTp_Total_parent)
 dat$QSTp_Total_teacher <- to_num(dat$QSTp_Total_teacher)
 
-# TR total (temporary)
-has_TR_total <- "AverageDevAbs_TR" %in% names(dat)
-if (has_TR_total) dat$AverageDevAbs_TR <- to_num(dat$AverageDevAbs_TR)
-
-if (!has_TR_total && isTRUE(STOP_IF_MISSING_TR_TOTAL)) {
-  stop("Dataset missing AverageDevAbs_TR. Add it, or set STOP_IF_MISSING_TR_TOTAL = FALSE.", call. = FALSE)
+# Child total: either OTm_total exists, or compute from OTm_1..OTm_16
+if (all(paste0("OTm_", 1:16) %in% names(dat))) {
+  dat$OTm_total <- rowSums(dat[, paste0("OTm_", 1:16)], na.rm = FALSE)
+} else if ("OTm_total" %in% names(dat)) {
+  dat$OTm_total <- to_num(dat$OTm_total)
+} else {
+  stop("Dataset missing OTm_total and OTm_1..OTm_16, cannot compute child total.", call. = FALSE)
 }
 
-# -----------------------------
-# Check that measures exist in norms_lookup
-# -----------------------------
+# TR item columns
+dat_norm_names <- dat
+names(dat_norm_names) <- normalize_names(names(dat_norm_names))
+tr_cols_norm <- normalize_names(TR_ITEMS)
+missing_tr <- setdiff(tr_cols_norm, names(dat_norm_names))
+if (length(missing_tr) > 0) {
+  stop(
+    paste0(
+      "Dataset is missing TR item columns required for the new TR total. Missing: ",
+      paste(missing_tr, collapse = ", "),
+      ". Expected (original names): ",
+      paste(TR_ITEMS, collapse = ", ")
+    ),
+    call. = FALSE
+  )
+}
+
+# Check norms contain all measures needed
 needed_measures <- c(
   "TE_Barca_dd", "TE_Ladro_dd",
-  "AverageDevAbs_TR",
+  TR_ITEMS,
   "TD",
   "OTm_total",
   "QST_parent_total",
   "QST_teacher_total"
 )
-
-present_measures <- unique(norms$measure)
-missing_measures <- setdiff(needed_measures, present_measures)
-
-# If TR total not in dataset, do not require its norms here
-if (!has_TR_total) missing_measures <- setdiff(missing_measures, "AverageDevAbs_TR")
-
+missing_measures <- setdiff(needed_measures, unique(norms$measure))
 if (length(missing_measures)) {
   stop(
     "These measures are missing in norms_lookup (norms$measure): ",
@@ -227,50 +230,119 @@ if (length(missing_measures)) {
 }
 
 # -----------------------------
-# Compute aligned z for the 6 indicators, row-wise
+# Compute z-aligned indicators (row-wise)
 # -----------------------------
-get_row_z <- function(i) {
-  age <- dat$Age[i]
-  
-  z_te_b <- lookup_z_aligned(norms, "TE_Barca_dd", age, dat$TE_Barca_dd[i])
-  z_te_l <- lookup_z_aligned(norms, "TE_Ladro_dd", age, dat$TE_Ladro_dd[i])
-  z_te   <- if (is.finite(z_te_b) && is.finite(z_te_l)) mean(c(z_te_b, z_te_l)) else NA_real_
-  
-  z_tr <- if (has_TR_total) lookup_z_aligned(norms, "AverageDevAbs_TR", age, dat$AverageDevAbs_TR[i]) else NA_real_
-  z_td <- lookup_z_aligned(norms, "TD", age, dat$RatioTD[i])
-  
-  z_child   <- lookup_z_aligned(norms, "OTm_total",         age, dat$OTm_total[i])
-  z_parent  <- lookup_z_aligned(norms, "QST_parent_total",  age, dat$QSTp_Total_parent[i])
-  z_teacher <- lookup_z_aligned(norms, "QST_teacher_total", age, dat$QSTp_Total_teacher[i])
-  
-  c(
-    z_TE = z_te,
-    z_TR = z_tr,
-    z_TD = z_td,
-    z_TMOQ_child_total   = z_child,
-    z_TMOQ_parent_total  = z_parent,
-    z_TMOQ_teacher_total = z_teacher
-  )
+n <- nrow(dat)
+
+# TE total from 2 z's
+z_te_b <- vapply(seq_len(n), function(i) lookup_z_aligned(norms, "TE_Barca_dd", dat$Age[i], dat$TE_Barca_dd[i]), numeric(1))
+z_te_l <- vapply(seq_len(n), function(i) lookup_z_aligned(norms, "TE_Ladro_dd", dat$Age[i], dat$TE_Ladro_dd[i]), numeric(1))
+z_te   <- ifelse(is.finite(z_te_b) & is.finite(z_te_l), (z_te_b + z_te_l) / 2, NA_real_)
+
+# TD
+z_td <- vapply(seq_len(n), function(i) lookup_z_aligned(norms, "TD", dat$Age[i], dat$RatioTD[i]), numeric(1))
+
+# Questionnaires
+z_child_total <- vapply(seq_len(n), function(i) lookup_z_aligned(norms, "OTm_total", dat$Age[i], dat$OTm_total[i]), numeric(1))
+z_parent      <- vapply(seq_len(n), function(i) lookup_z_aligned(norms, "QST_parent_total", dat$Age[i], dat$QSTp_Total_parent[i]), numeric(1))
+z_teacher     <- vapply(seq_len(n), function(i) lookup_z_aligned(norms, "QST_teacher_total", dat$Age[i], dat$QSTp_Total_teacher[i]), numeric(1))
+
+# TR items: z_aligned per duration, then m = mean(z) if complete
+tr_raw_mat <- as.data.frame(dat_norm_names[, tr_cols_norm, drop = FALSE])
+for (j in seq_along(tr_raw_mat)) tr_raw_mat[[j]] <- to_num(tr_raw_mat[[j]])
+
+z_tr_items <- matrix(NA_real_, nrow = n, ncol = length(TR_ITEMS))
+colnames(z_tr_items) <- TR_ITEMS
+
+for (j in seq_along(TR_ITEMS)) {
+  meas <- TR_ITEMS[j]
+  rawv <- tr_raw_mat[[j]]
+  z_tr_items[, j] <- vapply(seq_len(n), function(i) lookup_z_aligned(norms, meas, dat$Age[i], rawv[i]), numeric(1))
 }
 
-Z <- t(vapply(seq_len(nrow(dat)), get_row_z, FUN.VALUE = numeric(6)))
-Z <- as.data.frame(Z)
+tr_complete <- apply(z_tr_items, 1, function(x) all(is.finite(x)))
+m_tr <- rep(NA_real_, n)
+m_tr[tr_complete] <- rowMeans(z_tr_items[tr_complete, , drop = FALSE])
 
-# Convert to SS (1-19)
+# -----------------------------
+# Build TR total norm parameters (mu/sigma of m_tr by age cell)
+# -----------------------------
+age_cell <- vapply(dat$Age, function(a) nearest_age(a, age_grid), numeric(1))
+age_cell <- clamp(age_cell, min(age_grid), max(age_grid))
+
+m_ok <- is.finite(m_tr) & is.finite(age_cell)
+m_global <- m_tr[m_ok]
+
+mu_global <- mean(m_global)
+sigma_global <- sd(m_global)
+n_global <- length(m_global)
+
+if (!is.finite(sigma_global) || sigma_global <= 0) sigma_global <- 1
+
+by_age <- tibble(age = age_cell[m_ok], m = m_tr[m_ok]) %>%
+  group_by(.data$age) %>%
+  summarise(
+    n_complete = dplyr::n(),
+    mu_raw = mean(.data$m),
+    sigma_raw = sd(.data$m),
+    .groups = "drop"
+  )
+
+params <- tibble(age = age_grid) %>%
+  left_join(by_age, by = "age") %>%
+  mutate(
+    n_complete = ifelse(is.na(.data$n_complete), 0L, as.integer(.data$n_complete)),
+    mu_raw = ifelse(is.finite(.data$mu_raw), .data$mu_raw, NA_real_),
+    sigma_raw = ifelse(is.finite(.data$sigma_raw) & .data$sigma_raw > 0, .data$sigma_raw, NA_real_),
+    w = pmin(1, .data$n_complete / MIN_N_PER_AGE),
+    mu = ifelse(is.finite(.data$mu_raw), .data$w * .data$mu_raw + (1 - .data$w) * mu_global, mu_global),
+    sigma = ifelse(is.finite(.data$sigma_raw), .data$w * .data$sigma_raw + (1 - .data$w) * sigma_global, sigma_global),
+    sigma = ifelse(!is.finite(.data$sigma) | .data$sigma <= 0, sigma_global, .data$sigma),
+    mu_global = mu_global,
+    sigma_global = sigma_global,
+    n_global = n_global
+  ) %>%
+  select(age, n_complete, mu, sigma, mu_global, sigma_global, n_global)
+
+write_csv(params, OUT_TRPARAMS)
+
+# z_TR_total: re-standardize m_tr using params (nearest age cell)
+mu_by_cell <- setNames(params$mu, params$age)
+sd_by_cell <- setNames(params$sigma, params$age)
+
+z_tr_total <- rep(NA_real_, n)
+for (i in seq_len(n)) {
+  if (!is.finite(m_tr[i]) || !is.finite(age_cell[i])) next
+  a <- as.character(age_cell[i])
+  mu <- mu_by_cell[[a]]
+  sd <- sd_by_cell[[a]]
+  if (!is.finite(mu) || !is.finite(sd) || sd <= 0) next
+  z_tr_total[i] <- (m_tr[i] - mu) / sd
+}
+
+# -----------------------------
+# Assemble the 6 SoTQ indicators (aligned z)
+# -----------------------------
+Z <- tibble(
+  z_TE = z_te,
+  z_TR = z_tr_total,
+  z_TD = z_td,
+  z_Child = z_child_total,
+  z_Parent = z_parent,
+  z_Teacher = z_teacher
+)
+
+# Convert to scaled scores (SS 1..19)
 SS <- Z %>% mutate(across(everything(), z_to_ss19))
-names(SS) <- sub("^z_", "SS_", names(SS))
 
 # complete cases for correlation estimation
-ss_cols <- names(SS)
-complete_idx <- complete.cases(SS[, ss_cols, drop = FALSE])
-df_ss <- SS[complete_idx, ss_cols, drop = FALSE]
+complete_idx <- complete.cases(SS)
+df_ss <- SS[complete_idx, , drop = FALSE]
 
 k <- ncol(df_ss)
 if (k != 6) stop("Unexpected number of indicators: expected 6, got ", k, call. = FALSE)
 
-if (nrow(df_ss) < 50) {
-  warning("Few complete cases for correlation estimation (N = ", nrow(df_ss), ").", call. = FALSE)
-}
+if (nrow(df_ss) < 50) warning("Few complete cases for correlation estimation (N = ", nrow(df_ss), ").", call. = FALSE)
 
 # -----------------------------
 # Build SoTQ conversion table (theoretical distribution of sumSS)
@@ -281,7 +353,7 @@ diag(R) <- 1
 
 mu_sum <- k * 10
 var_sum <- (3^2) * sum(R)  # includes diagonals
-sd_sum  <- sqrt(var_sum)
+sd_sum <- sqrt(var_sum)
 
 if (!is.finite(sd_sum) || sd_sum <= 0) stop("Invalid sd_sum computed for SoTQ table.", call. = FALSE)
 
@@ -289,15 +361,11 @@ sum_min <- k * 1
 sum_max <- k * 19
 sumSS_vals <- sum_min:sum_max
 
-z_sum   <- (sumSS_vals - mu_sum) / sd_sum
+z_sum <- (sumSS_vals - mu_sum) / sd_sum
 SoTQ_raw <- round(100 + 15 * z_sum)
 SoTQ <- clamp(SoTQ_raw, SOTQ_CLAMP[1], SOTQ_CLAMP[2])
 
-out <- tibble(
-  sumSS = sumSS_vals,
-  SoTQ  = SoTQ
-)
-
+out <- tibble(sumSS = sumSS_vals, SoTQ = SoTQ)
 write_csv(out, OUT_TABLE)
 
 # -----------------------------
@@ -313,21 +381,12 @@ spread_out <- tibble(
   n_complete = nrow(df_ss),
   k_indicators = k
 )
-
 write_csv(spread_out, OUT_SPREAD)
 
-# -----------------------------
-# Console summary
-# -----------------------------
 message("Saved:")
+message("  - ", OUT_TRPARAMS)
 message("  - ", OUT_TABLE)
 message("  - ", OUT_SPREAD)
-message("")
-message("Sanity info:")
-message("  k = ", k)
-message("  N complete = ", nrow(df_ss))
-message("  mu_sum = ", sprintf("%.2f", mu_sum))
-message("  sd_sum = ", sprintf("%.2f", sd_sum))
-message("  thr95(deltaSS) = ", sprintf("%.2f", thr95))
-message("")
+message("Using DATA_XLSX: ", DATA_XLSX)
+message("k = ", k, ", N complete = ", nrow(df_ss))
 message("04_build_SoTQ_table.R completed successfully.")
