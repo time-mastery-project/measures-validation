@@ -2,11 +2,11 @@
 # Sense of Time Battery, scoring and standardization (table-based, no GAMLSS)
 #
 # Tables used:
-# - scoring/norms_lookup.csv  (main norms lookup; columns: measure, age, raw, z_aligned, ...)
-# - scoring/SoT_totalConversionTable.csv
-# - scoring/SoTQ_CI_params.csv (optional)
-# - scoring/SoTQ_profileSpreadThreshold.csv (optional)
-# - scoring/TR_total_norm_params.csv (required for TR total)
+# - norms_lookup.csv  (main norms lookup; columns: measure, age, raw, z_aligned, ...)
+# - SoT_totalConversionTable.csv
+# - SoTQ_CI_params.csv (optional)
+# - SoTQ_profileSpreadThreshold.csv (optional)
+# - TR_total_norm_params.csv (required for TR total)
 #
 # Plot tuning:
 # - Change PLOT_TEXT_SIZE to quickly tune all plot labels.
@@ -171,7 +171,7 @@ SOTQ_COMPONENTS <- c(
 # Load tables (once at startup)
 # -------------------------
 
-.NORMS_PATH <- find_file(file.path("scoring", "norms_lookup.csv"))
+.NORMS_PATH <- find_file(file.path("norms_lookup.csv"))
 .NORMS <- NULL
 .NORMS_BY_MEASURE <- NULL
 .GRID_AGE_UNIT <- "years"
@@ -206,7 +206,7 @@ if (!is.na(.NORMS_PATH)) {
   }
 }
 
-.SOTQ_TABLE_PATH <- find_file(file.path("scoring", "SoT_totalConversionTable.csv"))
+.SOTQ_TABLE_PATH <- find_file(file.path("SoT_totalConversionTable.csv"))
 .SOTQ_TABLE <- NULL
 if (!is.na(.SOTQ_TABLE_PATH)) {
   .SOTQ_TABLE <- suppressWarnings(read_csv(.SOTQ_TABLE_PATH, show_col_types = FALSE))
@@ -222,7 +222,7 @@ if (!is.na(.SOTQ_TABLE_PATH)) {
   }
 }
 
-.SOTQ_CI_PATH <- find_file(file.path("scoring", "SoTQ_CI_params.csv"))
+.SOTQ_CI_PATH <- find_file(file.path("SoTQ_CI_params.csv"))
 .SOTQ_HALF90 <- NA_real_
 if (!is.na(.SOTQ_CI_PATH)) {
   ci <- suppressWarnings(read_csv(.SOTQ_CI_PATH, show_col_types = FALSE))
@@ -233,7 +233,7 @@ if (!is.na(.SOTQ_CI_PATH)) {
   }
 }
 
-.SOTQ_SPREAD_PATH <- find_file(file.path("scoring", "SoTQ_profileSpreadThreshold.csv"))
+.SOTQ_SPREAD_PATH <- find_file(file.path("SoTQ_profileSpreadThreshold.csv"))
 .SOTQ_SPREAD_THRESH <- NA_real_
 if (!is.na(.SOTQ_SPREAD_PATH)) {
   sp <- suppressWarnings(read_csv(.SOTQ_SPREAD_PATH, show_col_types = FALSE))
@@ -244,7 +244,7 @@ if (!is.na(.SOTQ_SPREAD_PATH)) {
   }
 }
 
-.TR_TOTAL_PARAMS_PATH <- find_file(file.path("scoring", "TR_total_norm_params.csv"))
+.TR_TOTAL_PARAMS_PATH <- find_file(file.path("TR_total_norm_params.csv"))
 .TR_TOTAL_PARAMS <- NULL
 .TR_TOTAL_MU_GLOBAL <- NA_real_
 .TR_TOTAL_SD_GLOBAL <- NA_real_
@@ -619,7 +619,7 @@ server <- function(input, output, session) {
     if (is.null(.NORMS)) {
       items <- c(items, list(div(
         style = "color:#b30000; font-weight:600;",
-        "ERROR: Norms file not found or invalid, expected scoring/norms_lookup.csv."
+        "ERROR: Norms file not found or invalid, expected norms_lookup.csv."
       )))
     } else {
       age_min_ym <- grid_age_to_ym(.NORMS_AGE_MIN, .GRID_AGE_UNIT)
@@ -651,7 +651,7 @@ server <- function(input, output, session) {
     if (is.null(.TR_TOTAL_PARAMS)) {
       items <- c(items, list(div(
         style = "color:#b30000; font-weight:600;",
-        "WARNING: TR total norm parameters missing (scoring/TR_total_norm_params.csv), TR total cannot be computed from uploads."
+        "WARNING: TR total norm parameters missing (TR_total_norm_params.csv), TR total cannot be computed from uploads."
       )))
     } else {
       items <- c(items, list(div(

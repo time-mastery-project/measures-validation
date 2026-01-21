@@ -415,7 +415,7 @@ write_csv(norms_lookup, OUT_LOOKUP)
 write_csv(ss_to_raw_intervals, OUT_SSINT)
 
 # ------------------------------------------------------------
-# Transfer everything to shiny app folder
+# Transfer all scoring files also to shiny app folder
 # ------------------------------------------------------------
 dir.create("shiny/", recursive = TRUE, showWarnings = FALSE)
 files <- list.files("scoring/", full.names = TRUE, recursive = FALSE)
