@@ -158,16 +158,16 @@ SS = clamp(round(10 + 3 * z_aligned), 1, 19)
 
 ## Citation
 
-If you use this codebase, the Shiny app, or derived scores in academic work, please cite the relevant *Time Mastery Project* publications (to be added) and acknowledge the project website.
+If you use this codebase, the Shiny app, or derived scores in academic work, please cite the relevant *Time Mastery Project* publications (to be added) and acknowledge the project website: https://www.timemasteryproject.com/
 
 ---
 
 ## License
 
-Add license information here (e.g., MIT, GPL-3, CC BY-NC), and specify any restrictions on redistributing data or materials.
+Creative Commons Attribution–NonCommercial 4.0 International (CC BY-NC 4.0)
 
 ---
 
 ## Contact
 
-For scientific questions, validation details, or collaboration inquiries, please contact the project maintainers via the Time Mastery Project website.
+For scientific questions, validation details, collaboration inquiries, or anything, please contact the project maintainers via the Time Mastery Project website: https://www.timemasteryproject.com/contatti
