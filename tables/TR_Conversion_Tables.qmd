@@ -1,0 +1,111 @@
+---
+title: "SoT, TR Items SS to Raw Conversion Tables (Portrait)"
+format:
+  pdf:
+    toc: false
+    number-sections: false
+    keep-tex: false
+    output-file: "SoT_TR_Items_SS_to_Raw_Conversion_Tables.pdf"
+execute:
+  echo: false
+  warning: false
+  message: false
+header-includes:
+  - \usepackage{booktabs}
+  - \usepackage{float}
+---
+
+```{r}
+#| results: asis
+suppressPackageStartupMessages({
+  library(dplyr)
+  library(tidyr)
+  library(readr)
+  library(stringr)
+  library(knitr)
+  library(kableExtra)
+})
+
+PATH_INTERVALS <- "../scoring/ss_to_raw_intervals.csv"
+intervals <- readr::read_csv(PATH_INTERVALS, show_col_types = FALSE)
+
+# Keep only TR items 2..12
+intervals_tr <- intervals %>%
+  filter(str_starts(measure, "PercDevAbs_TR_")) %>%
+  mutate(sec = as.integer(str_extract(measure, "\\d+$"))) %>%
+  filter(sec >= 2, sec <= 12) %>%
+  mutate(label = paste0("TR ", sec))
+
+# Cell formatting
+fmt_num <- function(x, digits = 2) formatC(x, format = "f", digits = digits)
+
+cell_string <- function(lo, hi, digits = 2) {
+  if (is.infinite(hi)) return(paste0(fmt_num(lo, digits), "+"))
+  if (isTRUE(all.equal(lo, hi))) return(fmt_num(lo, digits))
+  paste0(fmt_num(lo, digits), " - ", fmt_num(hi, digits))
+}
+
+intervals_tr2 <- intervals_tr %>%
+  mutate(cell = mapply(cell_string, raw_min, raw_max, SIMPLIFY = TRUE)) %>%
+  select(age, ss_1_19, label, cell)
+
+ages <- sort(unique(intervals_tr2$age))
+ss_rows <- tibble(ss_1_19 = 19:1)
+
+# -----------------------------
+# First page: Italian explanation
+# -----------------------------
+cat("\\section*{Time Reproduction (TR), conversioni per i singoli item}\n\n")
+cat("Questo documento contiene le tabelle di conversione per i singoli item di TR (durate 2--12 s) per ciascuna et\\`a.\n\n")
+cat("\\subsection*{Nota pratica}\n\n")
+cat("Per ottenere il \\textbf{totale TR} coerente con l'app, bisogna prima convertire ciascun item nel relativo SS e poi seguire la procedura di aggregazione descritta nel documento dei \\textbf{Totali}. In questo file trovi solo le conversioni dei 11 item.\n\n")
+cat("\\newpage\n\n")
+
+# -----------------------------
+# Tables per age (portrait)
+# -----------------------------
+for (a in ages) {
+  dat_a <- intervals_tr2 %>% filter(age == a)
+
+  cat(sprintf("\\section*{Et\\`a %s anni}\n\n", a))
+
+  # TR items 2..6
+  tr_2_6 <- paste0("TR ", 2:6)
+  tab_2_6 <- dat_a %>%
+    filter(label %in% tr_2_6) %>%
+    select(ss_1_19, label, cell) %>%
+    pivot_wider(names_from = label, values_from = cell, values_fill = "-") %>%
+    right_join(ss_rows, by = "ss_1_19") %>%
+    arrange(desc(ss_1_19)) %>%
+    mutate(across(-ss_1_19, ~tidyr::replace_na(.x, "-")))
+
+  cat("\\subsection*{TR item (2--6 s)}\n\n")
+  cat(as.character(
+    kable(tab_2_6, format = "latex", booktabs = TRUE, align = "c",
+          col.names = c("SS", names(tab_2_6)[-1])) |>
+      kable_styling(latex_options = c("hold_position", "scale_down"), font_size = 7)
+  ))
+  cat("\n\n")
+
+  # TR items 7..12
+  tr_7_12 <- paste0("TR ", 7:12)
+  tab_7_12 <- dat_a %>%
+    filter(label %in% tr_7_12) %>%
+    select(ss_1_19, label, cell) %>%
+    pivot_wider(names_from = label, values_from = cell, values_fill = "-") %>%
+    right_join(ss_rows, by = "ss_1_19") %>%
+    arrange(desc(ss_1_19)) %>%
+    mutate(across(-ss_1_19, ~tidyr::replace_na(.x, "-")))
+
+  cat("\\subsection*{TR item (7--12 s)}\n\n")
+  cat(as.character(
+    kable(tab_7_12, format = "latex", booktabs = TRUE, align = "c",
+          col.names = c("SS", names(tab_7_12)[-1])) |>
+      kable_styling(latex_options = c("hold_position", "scale_down"), font_size = 7)
+  ))
+  cat("\n\n")
+
+  cat("\\newpage\n\n")
+}
+
+```

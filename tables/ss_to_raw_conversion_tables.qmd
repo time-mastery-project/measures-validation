@@ -1,0 +1,140 @@
+---
+title: "SoT, Totals SS to Raw Conversion Tables (Landscape)"
+format:
+  pdf:
+    toc: false
+    number-sections: false
+    keep-tex: false
+    output-file: "SoT_Totals_SS_to_Raw_Conversion_Tables.pdf"
+execute:
+  echo: false
+  warning: false
+  message: false
+header-includes:
+  - \usepackage{pdflscape}
+  - \usepackage{booktabs}
+  - \usepackage{float}
+---
+
+```{r}
+#| results: asis
+suppressPackageStartupMessages({
+  library(dplyr)
+  library(tidyr)
+  library(readr)
+  library(stringr)
+  library(knitr)
+  library(kableExtra)
+})
+
+PATH_INTERVALS <- "../scoring/ss_to_raw_intervals.csv"
+PATH_TR_PARAMS <- "../scoring/TR_total_norm_params.csv"
+
+intervals <- readr::read_csv(PATH_INTERVALS, show_col_types = FALSE)
+tr_pars   <- readr::read_csv(PATH_TR_PARAMS, show_col_types = FALSE)
+
+# --- SS boundaries in z for round(10 + 3*z), clamped 1..19
+ss_bounds_z <- function(ss) {
+  stopifnot(length(ss) == 1, ss >= 1, ss <= 19)
+  if (ss == 1)  return(c(-Inf, (1.5 - 10)/3))
+  if (ss == 19) return(c((18.5 - 10)/3, Inf))
+  c(((ss - 0.5) - 10)/3, ((ss + 0.5) - 10)/3)
+}
+
+# --- TR total algorithm helper (mean item SS interval yielding each TR total SS)
+tr_total_algo <- tr_pars %>%
+  select(age, mu, sigma) %>%
+  tidyr::expand_grid(ss_1_19 = 1:19) %>%
+  rowwise() %>%
+  mutate(
+    ztot_lo = ss_bounds_z(ss_1_19)[1],
+    ztot_hi = ss_bounds_z(ss_1_19)[2],
+    zmean_lo = mu + sigma * ztot_lo,
+    zmean_hi = mu + sigma * ztot_hi,
+    raw_min = 10 + 3 * zmean_lo,
+    raw_max = 10 + 3 * zmean_hi,
+    raw_min = pmax(1, raw_min),
+    raw_max = pmin(19, raw_max)
+  ) %>%
+  ungroup() %>%
+  transmute(
+    measure = "TR_TOTAL_ALGO_MEAN_ITEM_SS",
+    age = age,
+    ss_1_19 = ss_1_19,
+    raw_min = raw_min,
+    raw_max = raw_max
+  )
+
+# Totals only:
+# - Remove TR items and raw-average TR
+intervals_tot <- intervals %>%
+  filter(!str_starts(measure, "PercDevAbs_TR_")) %>%
+  filter(measure != "AverageDevAbs_TR") %>%
+  bind_rows(tr_total_algo)
+
+label_map <- tibble::tribble(
+  ~measure, ~label, ~ord,
+  "TR_TOTAL_ALGO_MEAN_ITEM_SS", "TR totale (media SS item)", 1,
+  "TD", "TD ratio", 2,
+  "TE_Barca_dd", "TE Barca", 3,
+  "TE_Ladro_dd", "TE Ladro", 4,
+  "TEdd_Mean",   "TE mean",  5,
+
+  "OTm_orientation", "Child orient", 6,
+  "OTm_management",  "Child manage", 7,
+  "OTm_total",       "Child total",  8,
+  "QST_parent_total",  "Parent total",  9,
+  "QST_teacher_total", "Teacher total", 10
+)
+
+intervals_tot <- intervals_tot %>%
+  inner_join(label_map, by = "measure")
+
+# Cell formatting
+fmt_num <- function(x, digits = 2) formatC(x, format = "f", digits = digits)
+
+cell_string <- function(measure, lo, hi) {
+  digits <- 2
+  if (str_starts(measure, "OTm_") || str_starts(measure, "QST_")) digits <- 0
+  if (is.infinite(hi)) return(paste0(fmt_num(lo, digits), "+"))
+  if (isTRUE(all.equal(lo, hi))) return(fmt_num(lo, digits))
+  paste0(fmt_num(lo, digits), " - ", fmt_num(hi, digits))
+}
+
+intervals_tot2 <- intervals_tot %>%
+  mutate(cell = mapply(cell_string, measure, raw_min, raw_max, SIMPLIFY = TRUE)) %>%
+  select(age, ss_1_19, ord, label, cell)
+
+ages <- sort(unique(intervals_tot2$age))
+ss_rows <- tibble(ss_1_19 = 19:1)
+
+for (a in ages) {
+  dat_a <- intervals_tot2 %>% filter(age == a)
+
+  cat("\\begin{landscape}\n\n")
+  cat(sprintf("\\section*{Et\\`a %s anni}\n\n", a))
+
+  labels <- dat_a %>% arrange(ord) %>% pull(label) %>% unique()
+
+  tab <- dat_a %>%
+    filter(label %in% labels) %>%
+    select(ss_1_19, label, cell) %>%
+    pivot_wider(names_from = label, values_from = cell, values_fill = "-") %>%
+    right_join(ss_rows, by = "ss_1_19") %>%
+    arrange(desc(ss_1_19)) %>%
+    mutate(across(-ss_1_19, ~tidyr::replace_na(.x, "-")))
+
+  cat(as.character(
+    kable(tab, format = "latex", booktabs = TRUE, align = "c",
+          col.names = c("SS", names(tab)[-1])) |>
+      kable_styling(latex_options = c("hold_position", "scale_down"), font_size = 8)
+  ))
+  cat("\n\n")
+
+  cat("\\subsection*{Come calcolare TR totale (in breve)}\n\n")
+  cat("\\noindent Converti ciascun item TR (2--12 s) nel relativo SS, calcola la media dei 11 SS (con decimali), poi usa la colonna \\textbf{“TR totale (media SS item)”} per ottenere lo SS totale.\n\n")
+
+  cat("\\end{landscape}\n")
+  cat("\\newpage\n\n")
+}
+```
