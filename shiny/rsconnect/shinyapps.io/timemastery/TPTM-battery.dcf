@@ -5,7 +5,7 @@ account: timemastery
 server: shinyapps.io
 hostUrl: https://api.shinyapps.io/v1
 appId: 16471510
-bundleId: 11474696
+bundleId: 11491712
 url: https://timemastery.shinyapps.io/TPTM-battery/
 version: 1
 asMultiple: FALSE
