@@ -1,0 +1,17 @@
+Valid analysis sample size (age matched & n_trials==36): 638 
+N with usable first3/last3 (>=8 reversals): 567 
+
+OVERALL      n_usable=567  r=0.7337  95% CI [0.6933, 0.7696]  p=6.81e-97
+6-7 years    n_usable=138  r=0.7237  95% CI [0.6332, 0.7947]  p=1.16e-23
+8-11 years   n_usable=429  r=0.6989  95% CI [0.6470, 0.7443]  p=3.89e-64
+
+Valid cases per band (all, regardless of usable means):
+
+ 6-7 years 8-11 years 
+       157        481 
+
+pct_with_8plus overall: 88.87 
+median_abs_change overall: 0.1302 
+median_abs_change by band:
+ 6-7 years 8-11 years 
+    0.1991     0.1184 
